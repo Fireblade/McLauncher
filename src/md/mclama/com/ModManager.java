@@ -83,7 +83,7 @@ public class ModManager extends JFrame{
 	 */
 	public static final long serialVersionUID = 1L;
 
-	static final String McVersion = "0.4.0"; //Build 13
+	static final String McVersion = "0.4.1"; //Build 14
 	static final String McCheckVersionPath = "http://mclama.com/McLauncher/McLauncher%20Version.txt";
 	static final String McLauncherPath = "http://mclama.com/McLauncher/Downloads/McLauncher.jar";
 	static final String McUpdaterPath = "http://mclama.com/McLauncher/Downloads/McLauncher.jar";
@@ -167,6 +167,9 @@ public class ModManager extends JFrame{
 	private JLabel lblNeedrestart;
 	protected JToggleButton tglbtnSendAnonData;
 	private JLabel lblSendAnonymousUse;
+	private JLabel lblWipmod;
+	private JLabel lblDeleteOldMod;
+	protected JToggleButton tglbtnDeleteBeforeUpdate;
 
 	/**
 	 * Launch the application.
@@ -523,7 +526,7 @@ public class ModManager extends JFrame{
 				newFilter();
 			}
 		});
-		comboBox.setModel(new DefaultComboBoxModel(new String[] {"No tag filter", "Vanilla", "Machine", "Mechanic", "New Ore", "Module", "Big Mod", "Power", "GUI"}));
+		comboBox.setModel(new DefaultComboBoxModel(new String[] {"No tag filter", "Vanilla", "Machine", "Mechanic", "New Ore", "Module", "Big Mod", "Power", "GUI", "Map-Gen", "Must-Have", "Equipment"}));
 		comboBox.setBounds(403, 44, 150, 26);
 		panelDownloadMods.add(comboBox);
 		
@@ -569,6 +572,10 @@ public class ModManager extends JFrame{
 		lblDLModLicense.setHorizontalAlignment(SwingConstants.RIGHT);
 		lblDLModLicense.setBounds(403, 294, 285, 16);
 		panelDownloadMods.add(lblDLModLicense);
+		
+		lblWipmod = new JLabel("WIP Mod!");
+		lblWipmod.setBounds(397, 314, 51, 16);
+		panelDownloadMods.add(lblWipmod);
 		
 		panelOptions = new JPanel();
 		tabbedPane.addTab("Options", null, panelOptions, null);
@@ -669,6 +676,19 @@ public class ModManager extends JFrame{
 		lblSendAnonymousUse = new JLabel("Send anonymous use data?");
 		lblSendAnonymousUse.setBounds(359, 6, 231, 16);
 		panel.add(lblSendAnonymousUse);
+		
+		lblDeleteOldMod = new JLabel("Delete old mod before updating?");
+		lblDeleteOldMod.setBounds(359, 34, 180, 16);
+		panel.add(lblDeleteOldMod);
+		
+		tglbtnDeleteBeforeUpdate = new JToggleButton("Toggle");
+		tglbtnDeleteBeforeUpdate.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				writeData();
+			}
+		});
+		tglbtnDeleteBeforeUpdate.setBounds(622, 28, 66, 28);
+		panel.add(tglbtnDeleteBeforeUpdate);
 		btnLaunchIgnore.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if(selProfile!=null){
@@ -746,8 +766,15 @@ public class ModManager extends JFrame{
 	protected void getDlModData() { //Display the data from the mod selected in Download Mods
 		String[] modData = dlModList[trow].split("~");
 		lblDMModTags.setText("Mod Tags: " + modData[3]);
+		//Set description text size smaller if too large
+		if(util.getStringWidth("Mod Description: " + modData[4])>800){
+			txtrDMModDescription.setFont(new Font("SansSerif", Font.PLAIN, 10));
+		} else txtrDMModDescription.setFont(new Font("SansSerif", Font.PLAIN, 12));
+		System.out.println(util.getStringWidth("Mod Description: " + modData[4]));
+		
 		txtrDMModDescription.setText("Mod Description: " + modData[4]);
 		lblDMRequiredMods.setText("Required Mods: " + modData[5]);
+		
 		if(modData[9].equals("")){
 			setModImg("http://www.mclama.com/Downloads/ModIcon.png");
 			//If we found no icon, use the default icon provided.
@@ -763,12 +790,21 @@ public class ModManager extends JFrame{
 		} else btnGotoMod.setEnabled(false); //If we don't have a mod page, disable the button.
 		if(!modData[12].equals(" ")) { //Show a license for the mod.
 			String str = modData[0] + " is under the " + modData[12] + " license.";
-			if(util.getStringWidth(str)>285){
+			if(util.getStringWidth(str)>280){
 				lblDLModLicense.setFont(new Font("SansSerif", Font.PLAIN, 10));
 			} else lblDLModLicense.setFont(new Font("SansSerif", Font.PLAIN, 12));
 			lblDLModLicense.setText(str);
 		}
-		else lblDLModLicense.setText("");
+		else lblDLModLicense.setText(""); //If no license, Then don't show.
+		//Show the user that this is a WIP mod before downloading
+		if(modData[3].contains("WIP")) lblWipmod.setText("WIP Mod!");
+		else lblWipmod.setText("");
+		
+		//if user already has mod, Consider this mod an update
+		if(util.IsModInstalled(modData[0])){
+			btnDownload.setText("Update");
+		}
+		else btnDownload.setText("Download"); //if not, its a new download.
 		
 	}
 	

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -15,6 +16,7 @@ public class UnZip
 {
     List<String> fileList;
     String gamePath;
+    String updateStr;
     private ModManager McLauncher;
  
     /**
@@ -26,6 +28,9 @@ public class UnZip
     public void unZipIt(ModManager McLauncher, String zipFile, String outputFolder){
         gamePath = McLauncher.gamePath;
         this.McLauncher = McLauncher;
+        
+    	Utility util = new Utility(null);
+        updateStr = CheckIfUpdate(outputFolder, util.remVer(zipFile.substring(zipFile.lastIndexOf('\\') + 1).replace(".zip","")));
  
      byte[] buffer = new byte[1024];
  
@@ -38,7 +43,7 @@ public class UnZip
     	}
  
     	//get the zip file content
-    	System.out.println(zipFile);
+    	System.out.println("Zip file at.. " + zipFile);
     	ZipInputStream zis = 
     		new ZipInputStream(new FileInputStream(zipFile));
     	//get the zipped file list entry
@@ -87,10 +92,9 @@ public class UnZip
         zis.closeEntry();
     	zis.close();
     	zis=null;
-    	Utility util = new Utility(null);
     	//System.out.println(zipFile.substring(zipFile.lastIndexOf('\\') + 1));
     	String sendreq = util.remVer(zipFile.substring(zipFile.lastIndexOf('\\') + 1).replace(".zip",""));
-    	util.SendDownloadRequest(sendreq);
+    	util.SendDownloadRequest(URLEncoder.encode(sendreq, "UTF-8")+updateStr);
     	System.out.println("entries... now..." + numberOfEntries);
     	System.out.println("Done");
     	McLauncher.lblDownloadModInfo.setText("Done");
@@ -103,5 +107,27 @@ public class UnZip
     }catch(IOException ex){
        ex.printStackTrace(); 
     }
-   }    
+   }
+
+	private String CheckIfUpdate(String modFolder, String mod) {
+		boolean foundit=false;
+		
+		File oldMod = new File(modFolder+"\\"+mod);
+		if(oldMod.isDirectory()){
+			System.out.println("IS DIRECTORY");
+			foundit=true;
+		}
+		else System.out.println("NOT DIRECTORY ... " + oldMod);
+		
+		
+		if(foundit){
+			if(McLauncher.tglbtnDeleteBeforeUpdate.isSelected()){ //If we delete the old mod before extracting.
+				if(oldMod.delete()){
+					System.out.println("Successfully deleted old mod for update.");
+				}
+			}
+			return "&update=true";
+		}
+		return "&update=false";
+	}    
 }

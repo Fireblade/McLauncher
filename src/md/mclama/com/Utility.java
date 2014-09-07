@@ -7,9 +7,11 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -214,7 +216,7 @@ public class Utility {
         Scanner scanner = null;
         try {
                
-                url = new URL(webpage + URLEncoder.encode(modname, "UTF-8"));
+                url = new URL(webpage + modname);
                 scanner = new Scanner(url.openStream(), "UTF-8");
                 scanner.useDelimiter("\\A");
                 String response = scanner.next();
@@ -329,6 +331,33 @@ public class Utility {
 		return (int)(font.getStringBounds(str, frc).getWidth());
 	}
 
-
+	public Boolean IsModInstalled(String mod) {
+		boolean foundit=false;
+		
+		File file = new File(gamePath+"\\mods");
+		String[] mods = file.list(new FilenameFilter() {
+			  @Override
+			  public boolean accept(File current, String name) {
+				  File mfile = new File(current, name);
+				  if(name.endsWith(".zip") || mfile.isDirectory())
+			    return true;
+				  else return false;
+			  }
+			});
+		
+		for(int i=0; i<mods.length; i++){
+			String str = mods[i].replace(".zip","");
+			if(remVer(str.substring(str.lastIndexOf('\\') + 1)).equals(mod)){ //if the mod name is found
+				return true;
+			}
+		}
+		
+		
+		if(foundit){
+			
+			return true;
+		}
+		return false;
+	}
 	
 }
