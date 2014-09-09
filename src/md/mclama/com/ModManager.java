@@ -170,6 +170,7 @@ public class ModManager extends JFrame{
 	private JLabel lblWipmod;
 	private JLabel lblDeleteOldMod;
 	protected JToggleButton tglbtnDeleteBeforeUpdate;
+	protected String modPath;
 
 	/**
 	 * Launch the application.
@@ -1112,13 +1113,21 @@ public class ModManager extends JFrame{
 			txtGamePath.setText(gamePath);
 			System.out.println("game path set to..." + gamePath);
 			
+			String tempPath = System.getenv("APPDATA") + "\\factorio\\mods\\";
+			System.out.println("Mods folder set to ... " + tempPath);
+			if(new File(tempPath).isDirectory()){
+				modPath = tempPath;
+			}
+			else {modPath = gamePath + "\\mods\\";}
+			
 			String lastProfile = (String) factObj.get("lastprofile");
 			//Options tab
 			try {
 				tglbtnNewModsFirst.setSelected((boolean) factObj.get("newModsFirst"));
 				tglbtnCloseAfterLaunch.setSelected((boolean) factObj.get("closeAfterLaunch"));
 				tglbtnCloseAfterUpdate.setSelected((boolean) factObj.get("closeAfterUpdate"));
-				tglbtnSendAnonData.setSelected(true);
+				tglbtnSendAnonData.setSelected((boolean) factObj.get("sendAnonData"));
+				tglbtnDeleteBeforeUpdate.setSelected((boolean) factObj.get("deleteBeforeUpdate"));
 			} catch (Exception e1) {
 				System.out.println("Failed to read some data, Possible update?");
 			}
@@ -1193,6 +1202,7 @@ public class ModManager extends JFrame{
 		data.put("closeAfterLaunch", tglbtnCloseAfterLaunch.isSelected());
 		data.put("closeAfterUpdate", tglbtnCloseAfterUpdate.isSelected());
 		data.put("sendAnonData", tglbtnSendAnonData.isSelected());
+		data.put("deleteBeforeUpdate", tglbtnDeleteBeforeUpdate.isSelected());
 		//put list into data
 		dlist.add(data);
 		
@@ -1225,13 +1235,14 @@ public class ModManager extends JFrame{
 			 file.flush();
 			 file.close();
 		 } catch (IOException e) {
+			 System.out.println("FAILED to save McLauncher data");
 			 e.printStackTrace();
 		 }
 		 System.out.println("Saved McLauncher data");
 	}
 	
 	private void getModCount() {
-		if(gamePath == null){
+		if(modPath == null){
 			getMods();
 		}
 		else if(modDir!=null){
@@ -1242,8 +1253,8 @@ public class ModManager extends JFrame{
 	}
 	
 	protected void getMods() {
-		if(gamePath != null){
-			File file = new File(gamePath+"\\mods");
+		if(modPath != null){
+			File file = new File(modPath);
 			modDir = file.list(new FilenameFilter() {
 			  @Override
 			  public boolean accept(File current, String name) {
@@ -1276,6 +1287,8 @@ public class ModManager extends JFrame{
 	         +  chooser.getSelectedFile());
 	      
 	      gamePath=""+chooser.getSelectedFile();
+	      if(gamePath.endsWith("\\mods")) {gamePath = gamePath.replace("\\mods", "");}
+	      System.out.println(gamePath);
 	      txtGamePath.setText(gamePath);
 	      
 	      getMods();
@@ -1304,7 +1317,7 @@ public class ModManager extends JFrame{
 	
 	@SuppressWarnings("unchecked")
 	protected void LaunchFactorioWithSelectedMods(boolean ignore) {
-		if(enabledModsDependencyCheck() || ignore){
+		if(enabledModsDependencyCheck(ignore) || ignore){
 			if(selProfile.mods.size()!=0){
 				JSONObject obj = new JSONObject();
 				JSONArray dlist = new JSONArray();
@@ -1321,10 +1334,11 @@ public class ModManager extends JFrame{
 				obj.put("mods", dlist);
 			
 				 try {
-					 FileWriter file = new FileWriter(gamePath+"\\mods\\mod-list.json");
+					 FileWriter file = new FileWriter(modPath+"mod-list.json");
 					 file.write(obj.toJSONString());
 					 file.flush();
 					 file.close();
+					 System.out.println("Saved mod-list.json    " + modPath+"mod-list.json");
 				 } catch (IOException e) {
 					 e.printStackTrace();
 				 }
@@ -1367,7 +1381,7 @@ public class ModManager extends JFrame{
 		}
 	}
 
-	private boolean enabledModsDependencyCheck() {
+	private boolean enabledModsDependencyCheck(boolean ignore) {
 		String checkStr="";
 		boolean canLaunch=true;
 		for(int i=selProfile.mods.size()-1; i>=0; i--) {
@@ -1384,7 +1398,8 @@ public class ModManager extends JFrame{
 		if(!checkStr.equals("") && !checkStr.equals("None or Already enabled")){
 			canLaunch=false;
 			System.out.println("Launch failure with.. " + checkStr);
-			JOptionPane.showMessageDialog(null, "You must enable the following mods before this profile can be launched\n" + checkStr);
+			if(!ignore)
+			{JOptionPane.showMessageDialog(null, "You must enable the following mods before this profile can be launched\n" + checkStr);}
 			lblRequiredMods.setText("Required Mods: " + checkStr.replace("\\n",", "));
 			btnLaunchIgnore.setVisible(true);
 		}

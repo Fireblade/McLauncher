@@ -36,11 +36,13 @@ public class Utility {
 	
 	private ModManager McLauncher;
 	private String gamePath;
+	private String modPath;
 
 	public Utility(ModManager McLauncher) {
 		if(McLauncher!=null){
 			this.McLauncher = McLauncher;
 			gamePath = McLauncher.gamePath;
+			modPath = McLauncher.modPath;
 		}
 	}
 	
@@ -64,9 +66,9 @@ public class Utility {
 				obj = parser.parse(new FileReader(gamePath + "\\data\\base\\info.json"));
 			} 
 			else if(modName.contains(".zip")){
-				getJsonFromZip(gamePath + "\\mods\\" + modName);
+				getJsonFromZip(modPath + modName);
 				obj = parser.parse(new FileReader(System.getProperty("java.io.tmpdir") + modName.replace(".zip", "") + "\\info.json"));
-			}	else obj = parser.parse(new FileReader(gamePath + "\\mods\\" + modName + "\\info.json"));
+			}	else obj = parser.parse(new FileReader(modPath + modName + "\\info.json"));
 			 
 			JSONObject jsonObject = (JSONObject) obj;
 			
@@ -90,9 +92,9 @@ public class Utility {
 		try {
 			Object obj;
 			if(modName.contains(".zip")){
-				getJsonFromZip(gamePath + "\\mods\\" + modName);
+				getJsonFromZip(modPath + modName);
 				obj = parser.parse(new FileReader(System.getProperty("java.io.tmpdir") + modName.replace(".zip", "") + "\\info.json"));
-			}	else obj = parser.parse(new FileReader(gamePath + "\\mods\\" + modName + "\\info.json"));
+			}	else obj = parser.parse(new FileReader(modPath + modName + "\\info.json"));
 			JSONObject jsonObject = (JSONObject) obj;
 			
 			JSONArray jsonArray = (JSONArray) jsonObject.get("dependencies");
@@ -334,7 +336,7 @@ public class Utility {
 	public Boolean IsModInstalled(String mod) {
 		boolean foundit=false;
 		
-		File file = new File(gamePath+"\\mods");
+		File file = new File(McLauncher.modPath);
 		String[] mods = file.list(new FilenameFilter() {
 			  @Override
 			  public boolean accept(File current, String name) {

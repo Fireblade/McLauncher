@@ -16,6 +16,7 @@ public class UnZip
 {
     List<String> fileList;
     String gamePath;
+    String modPath;
     String updateStr;
     private ModManager McLauncher;
  
@@ -28,6 +29,7 @@ public class UnZip
     public void unZipIt(ModManager McLauncher, String zipFile, String outputFolder){
         gamePath = McLauncher.gamePath;
         this.McLauncher = McLauncher;
+        this.modPath = McLauncher.modPath;
         
     	Utility util = new Utility(null);
         updateStr = CheckIfUpdate(outputFolder, util.remVer(zipFile.substring(zipFile.lastIndexOf('\\') + 1).replace(".zip","")));
@@ -37,7 +39,7 @@ public class UnZip
      try{
  
     	//create output directory is not exists
-    	File folder = new File(gamePath + "\\mods\\");
+    	File folder = new File(modPath);
     	if(!folder.exists()){
     		folder.mkdir();
     	}

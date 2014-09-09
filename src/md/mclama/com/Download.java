@@ -189,7 +189,7 @@ public void run() {
                 McLauncher.lblDownloadModInfo.setText("Extracting...");
             	UnZip zip = new UnZip();
             	System.out.println(gamePath+"\\"+getFileName(url));
-            	zip.unZipIt(McLauncher,gamePath+"\\"+getFileName(url),McLauncher.gamePath+"\\mods");
+            	zip.unZipIt(McLauncher,gamePath+"\\"+getFileName(url),McLauncher.modPath);
 
             	//File f = new File(gamePath+"\\"+getFileName(url));
             	//f.delete();
