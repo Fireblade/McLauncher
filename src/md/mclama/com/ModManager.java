@@ -1,8 +1,11 @@
 package md.mclama.com;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -83,12 +86,14 @@ public class ModManager extends JFrame{
 	 */
 	public static final long serialVersionUID = 1L;
 
-	static final String McVersion = "0.4.1"; //Build 16
+	static final String McVersion = "0.4.2"; //Build 17
 	static final String McCheckVersionPath = "http://mclama.com/McLauncher/McLauncher%20Version.txt";
 	static final String McLauncherPath = "http://mclama.com/McLauncher/Downloads/McLauncher.jar";
 	static final String McUpdaterPath = "http://mclama.com/McLauncher/Downloads/McLauncher.jar";
+	private final boolean testBtnEnabled=false; //a test button that is to be removed on release
 	
-	ModManager McLauncher = this;
+	public ModManager McLauncher = this;
+	public Utility util = new Utility(this); //Utility class
 
 	private JPanel contentPane;
 	private DefaultListModel<String> listModel;
@@ -118,7 +123,6 @@ public class ModManager extends JFrame{
 	private JLabel lblRequiredMods;
 	private String reqModsStr = "None";
 
-	private Utility util;
 	private final JButton btnUpdate = new JButton("Update Launcher");
 
 	private JLabel lblModRequires;
@@ -171,11 +175,27 @@ public class ModManager extends JFrame{
 	private JLabel lblDeleteOldMod;
 	protected JToggleButton tglbtnDeleteBeforeUpdate;
 	protected String modPath;
+	
+	public static Console con;
 
 	/**
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+					con = new Console();
+					con.setVisible(false);
+					Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
+				    int x = (int) ((dimension.getWidth() - con.getWidth()) / 2);
+				    int y = (int) ((dimension.getHeight() - con.getHeight()) / 2);
+				    con.setLocation(x, y);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
 		EventQueue.invokeLater(new Runnable() {
 			@Override
 			public void run() {
@@ -189,6 +209,10 @@ public class ModManager extends JFrame{
 					ModManager frame = new ModManager();
 					frame.setResizable(false);
 					frame.setVisible(true);
+					Dimension dimension = Toolkit.getDefaultToolkit().getScreenSize();
+				    int x = (int) ((dimension.getWidth() - frame.getWidth()) / 2);
+				    int y = (int) ((dimension.getHeight() - frame.getHeight()) / 2);
+				    frame.setLocation(x, y);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -372,8 +396,8 @@ public class ModManager extends JFrame{
 		lblRequiredMods.setFont(new Font("SansSerif", Font.PLAIN, 10));
 		
 		JButton btnNewButton = new JButton("TEST");
-		btnNewButton.setVisible(false);
-		btnNewButton.setEnabled(false);
+		btnNewButton.setVisible(testBtnEnabled);
+		btnNewButton.setEnabled(testBtnEnabled);
 		btnNewButton.setBounds(338, 61, 90, 28);
 		panelLauncher.add(btnNewButton);
 		btnUpdate.setBounds(218, 322, 103, 20);
@@ -394,6 +418,16 @@ public class ModManager extends JFrame{
 		btnLaunchIgnore = new JButton("Launch + ignore");
 		btnLaunchIgnore.setBounds(566, 284, 123, 23);
 		panelLauncher.add(btnLaunchIgnore);
+		
+		JButton btnConsole = new JButton("Console");
+		btnConsole.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				boolean changeto = !con.isVisible();
+				con.setVisible(changeto);
+			}
+		});
+		btnConsole.setBounds(335, 0, 90, 28);
+		panelLauncher.add(btnConsole);
 		
 		JPanel panelDownloadMods = new JPanel();
 		tabbedPane.addTab("Download Mods", null, panelDownloadMods, null);
@@ -432,10 +466,10 @@ public class ModManager extends JFrame{
 			public void mouseReleased(MouseEvent e) {
 				trow = tableDownloads.rowAtPoint(e.getPoint()); //set new table row
 				//trow = tableDownloads.getRowSorter().convertRowIndexToView(tableDownloads.rowAtPoint(e.getPoint()));
-				//System.out.println("ROW AT : " + trow);
+				//con.log("Log","ROW AT : " + trow);
 				//getDlModData();
 				trow = tableDownloads.getRowSorter().convertRowIndexToModel(trow);
-				System.out.println("ROW AT : " + trow);
+				con.log("Log","ROW AT : " + trow);
 				//findModInDownloads(dlModel.getValueAt(tableDownloads.rowAtPoint(e.getPoint(),0).toString());
 				getDlModData();
 				canDownloadMod=true;
@@ -457,13 +491,13 @@ public class ModManager extends JFrame{
 					String dlUrl = getModDownloadUrl();
 					try {
 						if(dlUrl.equals("") || dlUrl.equals(" ") || dlUrl==null){
-							System.out.println("No download link for mod, got... '" + dlUrl + "'");
+							con.log("Log","No download link for mod, got... '" + dlUrl + "'");
 						}else {
 							downloading=true;
 							Download dler = new Download(new URL(dlUrl),McLauncher);
 						}
 					} catch (MalformedURLException e1) {
-						System.out.println("Failed to download mod... No download URL?");
+						con.log("Log","Failed to download mod... No download URL?");
 					}
 				}
 			}
@@ -701,12 +735,7 @@ public class ModManager extends JFrame{
 		//This is my test button. I use this to test things then implement them into the swing.
 		btnNewButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				try {
-					Download dler = new Download(new URL("http://www.mclama.com/McLauncher/Downloads/Mods/DyTech-Automation.zip"),McLauncher);
-				} catch (MalformedURLException e1) {
-					e1.printStackTrace();
-				}
-				//util.SendDownloadRequest("John_doe_mod");
+				testButtonCode(e);
 			}
 		});
 		//Disable mods button. (from profile)
@@ -744,6 +773,13 @@ public class ModManager extends JFrame{
 		init();     //some extra init
 	}
 
+	protected void testButtonCode(ActionEvent e) {
+		boolean changeto = !con.isVisible();
+		con.setVisible(changeto);
+		//con.txtConsole.setText("Wall Of Text \n Test2?");
+		
+	}
+
 	protected String getModDownloadUrl() {
 		String[] modData = dlModList[trow].split("~"); //trow = Download Mods Table Row
 		return modData[7]; //Return mod data
@@ -771,7 +807,7 @@ public class ModManager extends JFrame{
 		if(util.getStringWidth("Mod Description: " + modData[4])>800){
 			txtrDMModDescription.setFont(new Font("SansSerif", Font.PLAIN, 10));
 		} else txtrDMModDescription.setFont(new Font("SansSerif", Font.PLAIN, 12));
-		System.out.println(util.getStringWidth("Mod Description: " + modData[4]));
+		con.log("Log",util.getStringWidth("Mod Description: " + modData[4])+"");
 		
 		txtrDMModDescription.setText("Mod Description: " + modData[4]);
 		lblDMRequiredMods.setText("Required Mods: " + modData[5]);
@@ -836,16 +872,15 @@ public class ModManager extends JFrame{
 	private void init() {
 		File f = new File(gamePath); //Check if we have read and write access
 		if(f.canWrite() & f.canRead()) {
-		  System.out.println("Access to read and write allowed");
+		  con.log("Log","Access to read and write allowed");
 		} else {
 			JOptionPane.showMessageDialog(null, "McLauncher does not have access to read or write files.\nMclauncher wont work without access.");
 			System.exit(0);
 		}
 		
 		try {
-			util = new Utility(this); //Utility class
 			String out = new Scanner(new URL(McCheckVersionPath).openStream(), "UTF-8").useDelimiter("\\A").next();
-			System.out.println("McLauncher version: " + McVersion + " Checked version: " +out);
+			con.log("Log","McLauncher version: " + McVersion + " Checked version: " +out);
 			//Compare versions
 			if(!util.testSameVersion(out,McVersion) && util.newerVersion(out, McVersion)){
 				btnUpdate.setVisible(true);
@@ -879,7 +914,7 @@ public class ModManager extends JFrame{
 	private void setModDownloads() {
 		String downloadModList = util.getModDownloads();
 		dlModList = downloadModList.split(";");
-		System.out.println("DL Mod count.." + dlModList.length);
+		con.log("Log","Downloadable mods found... " + dlModList.length);
 		lblModDlCounter.setText("Downloadable mod Count: " + dlModList.length);
 		
 		if(tglbtnNewModsFirst.isSelected()){
@@ -916,7 +951,7 @@ public class ModManager extends JFrame{
 	protected String checkDependency(String[] depen) {
 		String requiredMods = "";
 		if(depen[0]!=""){
-			//System.out.println("Dependency.. " + depen[0] + "-------" + depen[1]);
+			//con.log("Log","Dependency.. " + depen[0] + "-------" + depen[1]);
 			for(int i=0; i<depen.length; i++){
 				boolean optmod = false;
 				boolean reqmv = false; //required mod version
@@ -927,8 +962,8 @@ public class ModManager extends JFrame{
 					//Optional mod
 					optmod = true;
 					optstr = depen[i].split("\\? ");//0 will always be empty
-					//System.out.println(optstr[0]); //0 will always be empty
-					//System.out.println(optstr[1]);
+					//con.log("Log",optstr[0]); //0 will always be empty
+					//con.log("Log",optstr[1]);
 				}
 				if(depen[i].contains(">=")){
 					//requires mod over version
@@ -937,8 +972,8 @@ public class ModManager extends JFrame{
 						reqstr = optstr[1].split(" >= ");
 					}else
 						reqstr = depen[i].split(" >= ");
-					//System.out.println(reqstr[0]);
-					//System.out.println(reqstr[1]);
+					//con.log("Log",reqstr[0]);
+					//con.log("Log",reqstr[1]);
 				}
 				else {
 					//just requires mod
@@ -953,7 +988,7 @@ public class ModManager extends JFrame{
 				if(reqmv){
 					String depenVers = reqstr[1];
 					if(!optmod) depenMod = reqstr[0];
-					System.out.println(depenMod + " with vers " + depenVers);
+					con.log("Log",depenMod + " with vers " + depenVers);
 					if(!modIsEnabled(depenMod)){//if mod is not already enabled
 						if(!optmod){            //if its not a optional mod
 							requiredMods+=(depenMod+"_"+depenVers+", ");
@@ -961,7 +996,7 @@ public class ModManager extends JFrame{
 					}
 				}
 				else {
-					//System.out.println(depen[i]);
+					//con.log("Log",depen[i]);
 					if(!modIsEnabled(depen[i])){
 						requiredMods+=depen[i]+", ";
 					}
@@ -970,7 +1005,7 @@ public class ModManager extends JFrame{
 			if(requiredMods.equals(", ") || requiredMods.equals("")) requiredMods="None or Already enabled";
 			lblModRequires.setText("Mod Requires: " + requiredMods);
 			return requiredMods;
-		}else System.out.println("no mod dependency");
+		}else con.log("Log","no mod dependency");
 		lblModRequires.setText("Mod Requires: None or Already enabled");
 		return "None or Already enabled";
 	}
@@ -994,7 +1029,7 @@ public class ModManager extends JFrame{
 			if(p.name.equals(str)){
 				selProfile=null;
 				profiles.remove(i); //remove profile from list
-				System.out.println("Deleted profile... " + str);
+				con.log("Log","Deleted profile... " + str);
 				writeData();
 			}
 			else {
@@ -1022,7 +1057,7 @@ public class ModManager extends JFrame{
 				if(p.name.equals(txtProfile.getText())){
 					profileList.setSelectedValue(profileListMdl.lastElement(), true);
 					selectedProfile();
-					System.out.println("Renamed profile");
+					con.log("Log","Renamed profile");
 					writeData();
 				}
 			}
@@ -1031,7 +1066,7 @@ public class ModManager extends JFrame{
 
 	private void selectedProfile() {
 		String name = profileList.getSelectedValue().toString();
-		System.out.println("Selected... " + name);
+		con.log("Log","Selected profile " + name);
 		for(int i=profiles.size()-1; i>=0; i--) {
 			Profile p = profiles.get(i);
 			if(name.equals(p.name)){
@@ -1045,7 +1080,7 @@ public class ModManager extends JFrame{
 
 	protected void removeMod() {
 		if(enabledModsList.getSelectedValue()==null){
-			System.out.println("please select a mod to remove first");
+			con.log("Log","please select a mod to remove first");
 		}
 		else 
 		{ //No problems, lets go
@@ -1058,10 +1093,10 @@ public class ModManager extends JFrame{
 
 	protected void addMod() {
 		if(modsList.getSelectedValue()==null){
-			System.out.println("please select a mod to add first");
+			con.log("Log","please select a mod to add first");
 		}
 		else if(profileList.getSelectedValue()==null){
-			System.out.println("please select a profile before adding a mod");
+			con.log("Log","please select a profile before adding a mod");
 		}else 
 		{ //No problems, lets go
 			String str = modsList.getSelectedValue().toString();
@@ -1108,7 +1143,7 @@ public class ModManager extends JFrame{
 		try {
 		 
 			Object obj = parser.parse(new FileReader("McLauncher.json"));
-			System.out.println("jar path.." + new File(ModManager.class.getProtectionDomain().getCodeSource().getLocation().getPath()));
+			con.log("Log","jar path.." + new File(ModManager.class.getProtectionDomain().getCodeSource().getLocation().getPath()));
 			 
 			JSONObject jsonObject = (JSONObject) obj;
 			 
@@ -1119,10 +1154,10 @@ public class ModManager extends JFrame{
 			gamePath = (String) factObj.get("path");
 			if(gamePath==null) gamePath = (String) parser.parse(new FileReader("."));
 			txtGamePath.setText(gamePath);
-			System.out.println("game path set to..." + gamePath);
+			con.log("Log","game path set to..." + gamePath);
 			
 			String tempPath = System.getenv("APPDATA") + "\\factorio\\mods\\";
-			System.out.println("Mods folder set to ... " + tempPath);
+			con.log("Log","Mods folder set to ... " + tempPath);
 			if(new File(tempPath).isDirectory()){
 				modPath = tempPath;
 			}
@@ -1137,7 +1172,7 @@ public class ModManager extends JFrame{
 				tglbtnSendAnonData.setSelected((boolean) factObj.get("sendAnonData"));
 				tglbtnDeleteBeforeUpdate.setSelected((boolean) factObj.get("deleteBeforeUpdate"));
 			} catch (Exception e1) {
-				System.out.println("Failed to read some data, Possible update?");
+				con.log("Warning","Failed to read some data, Possible update?");
 			}
 			
 			
@@ -1153,13 +1188,13 @@ public class ModManager extends JFrame{
 				 
 				String name = (String) pObj.get("name");
 				String mods = (String) pObj.get("mods");
-				System.out.println("Profile: " + name + " with " + mods + " loaded.");
+				con.log("Log","Profile: " + name + " with " + mods + " loaded.");
 				 
 				Profile pfile = new Profile(name, null);
 				profiles.add(pfile);
 				profileListMdl.addElement(name);
 				//Lets add its mods now
-				//System.out.println(mods.replace("[", "").replace("]", ""));
+				//con.log("Log",mods.replace("[", "").replace("]", ""));
 				String[] pmods = mods.replace("[", "").replace("]", "").split(", ");
 				for(int i=0; i<pmods.length; i++){
 					pfile.mods.add(pmods[i]);
@@ -1171,7 +1206,7 @@ public class ModManager extends JFrame{
 						selectedProfile();
 					}
 				}catch(Exception e){
-					System.out.println("[ERROR] Last profile was null");
+					con.log("Error"," Last profile was null");
 				}
 				 
 				count++;
@@ -1180,7 +1215,7 @@ public class ModManager extends JFrame{
 					iter = msg.iterator();
 				}
 				catch (NullPointerException e){
-					System.out.println(count + " profiles loaded.");
+					con.log("Log",count + " profiles loaded.");
 					break;
 				}
 			}
@@ -1229,9 +1264,9 @@ public class ModManager extends JFrame{
 			profileDataList = new JSONArray();
 			profileData.put("name", p.name);
 			profileData.put("mods", p.mods.toString());
-			//System.out.println(p.name + "..." + p.mods.toString());
+			//con.log("Log",p.name + "..." + p.mods.toString());
 			profileDataList.add(profileData);
-			//System.out.println("list.." + profileDataList.toString());
+			//con.log("Log","list.." + profileDataList.toString());
 			profileListObj.put("profile"+i, profileDataList);
 		}
 		profileList.add(profileListObj);
@@ -1243,10 +1278,10 @@ public class ModManager extends JFrame{
 			 file.flush();
 			 file.close();
 		 } catch (IOException e) {
-			 System.out.println("FAILED to save McLauncher data");
+			 con.log("Log","FAILED to save McLauncher data");
 			 e.printStackTrace();
 		 }
-		 System.out.println("Saved McLauncher data");
+		 con.log("Log","Saved McLauncher data.");
 	}
 	
 	private void getModCount() {
@@ -1255,7 +1290,7 @@ public class ModManager extends JFrame{
 		}
 		else if(modDir!=null){
 			modCount = modDir.length+1; //+1 for base
-			System.out.println("Available Mods: " + modCount);
+			con.log("Log","Available Mods: " + modCount);
 			lblAvailableMods.setText("Available Mods: " + modCount);
 		}
 	}
@@ -1272,7 +1307,7 @@ public class ModManager extends JFrame{
 				  else return false;
 			  }
 			});
-			//System.out.println(Arrays.toString(modDir));
+			//con.log("Log",Arrays.toString(modDir));
 			getModCount();
 			getCurrentMods();
 		}
@@ -1288,21 +1323,21 @@ public class ModManager extends JFrame{
 	    chooser.setAcceptAllFileFilterUsed(false);
 	    
 	    if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) { 
-	      System.out.println("getCurrentDirectory(): " 
+	      con.log("Log","getCurrentDirectory(): " 
 	         +  chooser.getCurrentDirectory());
 	      
-	      System.out.println("getSelectedFile() : " 
+	      con.log("Log","getSelectedFile() : " 
 	         +  chooser.getSelectedFile());
 	      
 	      gamePath=""+chooser.getSelectedFile();
 	      if(gamePath.endsWith("\\mods")) {gamePath = gamePath.replace("\\mods", "");}
-	      System.out.println(gamePath);
+	      con.log("Log",gamePath);
 	      txtGamePath.setText(gamePath);
 	      
 	      getMods();
 	      }
 	    else {
-	      System.out.println("No Selection ");
+	      con.log("Log","No Selection ");
 	      }
 	}
 
@@ -1346,7 +1381,7 @@ public class ModManager extends JFrame{
 					 file.write(obj.toJSONString());
 					 file.flush();
 					 file.close();
-					 System.out.println("Saved mod-list.json    " + modPath+"mod-list.json");
+					 con.log("Log","Saved mod-list.json    " + modPath+"mod-list.json");
 				 } catch (IOException e) {
 					 e.printStackTrace();
 				 }
@@ -1380,7 +1415,7 @@ public class ModManager extends JFrame{
 				}
 			}
 			 
-			System.out.println("Launching game with profile..." + selProfile.name);
+			con.log("Log","Launching game with profile..." + selProfile.name);
 			//Statistics
 			util.noteInfo("GameLaunch");
 			if(tglbtnCloseAfterLaunch.isSelected()){ //Option 
@@ -1405,7 +1440,7 @@ public class ModManager extends JFrame{
 		}
 		if(!checkStr.equals("") && !checkStr.equals("None or Already enabled")){
 			canLaunch=false;
-			System.out.println("Launch failure with.. " + checkStr);
+			con.log("Severe","Launch failure with.. " + checkStr);
 			if(!ignore)
 			{JOptionPane.showMessageDialog(null, "You must enable the following mods before this profile can be launched\n" + checkStr);}
 			lblRequiredMods.setText("Required Mods: " + checkStr.replace("\\n",", "));
@@ -1417,10 +1452,10 @@ public class ModManager extends JFrame{
 	@SuppressWarnings("unused")
 	private void runGame(String string) {
 		try {
-			System.out.println("Launched game at... " + string);
+			con.log("Log","Launched game at... " + string);
 			Process pFactorio = Runtime.getRuntime().exec(string);
 		} catch (IOException e) {
-			System.out.println("Failed to launch game at " + string);
+			con.log("Severe","Failed to launch game at " + string);
 		}
 	}
 }

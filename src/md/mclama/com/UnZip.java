@@ -19,6 +19,7 @@ public class UnZip
     String modPath;
     String updateStr;
     private ModManager McLauncher;
+    private Console con;
  
     /**
      * Unzip it
@@ -30,6 +31,7 @@ public class UnZip
         gamePath = McLauncher.gamePath;
         this.McLauncher = McLauncher;
         this.modPath = McLauncher.modPath;
+        con = McLauncher.con;
         
     	Utility util = new Utility(null);
         updateStr = CheckIfUpdate(outputFolder, util.remVer(zipFile.substring(zipFile.lastIndexOf('\\') + 1).replace(".zip","")));
@@ -45,7 +47,7 @@ public class UnZip
     	}
  
     	//get the zip file content
-    	System.out.println("Zip file at.. " + zipFile);
+    	con.log("Log","Zip file at.. " + zipFile);
     	ZipInputStream zis = 
     		new ZipInputStream(new FileInputStream(zipFile));
     	//get the zipped file list entry
@@ -55,14 +57,14 @@ public class UnZip
     	int numMax = zipp.size();
     	zipp.close();
     	zipp=null;
-    	System.out.println("entries... " + numMax);
+    	con.log("Log","entries... " + numMax);
  
     	while(ze!=null){
 
     	   String fileName = ze.getName();
            File newFile = new File(outputFolder + File.separator + fileName);
  
-           System.out.println("file unzip : "+ newFile.getAbsoluteFile());
+           con.log("Log","file unzip : "+ newFile.getAbsoluteFile());
            numberOfEntries++;
            McLauncher.pBarExtractMod.setValue((numberOfEntries/numMax)*100);
             //create all non exists folders
@@ -94,11 +96,11 @@ public class UnZip
         zis.closeEntry();
     	zis.close();
     	zis=null;
-    	//System.out.println(zipFile.substring(zipFile.lastIndexOf('\\') + 1));
+    	//con.log("Log",zipFile.substring(zipFile.lastIndexOf('\\') + 1));
     	String sendreq = util.remVer(zipFile.substring(zipFile.lastIndexOf('\\') + 1).replace(".zip",""));
     	util.SendDownloadRequest(URLEncoder.encode(sendreq, "UTF-8")+updateStr);
-    	System.out.println("entries... now..." + numberOfEntries);
-    	System.out.println("Done");
+    	con.log("Log","entries... now..." + numberOfEntries);
+    	con.log("Log","Done");
     	McLauncher.lblDownloadModInfo.setText("Done");
     	McLauncher.downloading=false;
     	
@@ -118,16 +120,16 @@ public class UnZip
 		
 		File oldMod = new File(modFolder+"\\"+mod);
 		if(oldMod.isDirectory()){
-			System.out.println("IS DIRECTORY");
+			con.log("Log","IS DIRECTORY");
 			foundit=true;
 		}
-		else System.out.println("NOT DIRECTORY ... " + oldMod);
+		else con.log("Log","NOT DIRECTORY ... " + oldMod);
 		
 		
 		if(foundit){
 			if(McLauncher.tglbtnDeleteBeforeUpdate.isSelected()){ //If we delete the old mod before extracting.
 				if(oldMod.delete()){
-					System.out.println("Successfully deleted old mod for update.");
+					con.log("Log","Successfully deleted old mod for update.");
 				}
 			}
 			return "&update=true";

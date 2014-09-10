@@ -1,7 +1,11 @@
 package md.mclama.com;
 
+import java.awt.BorderLayout;
 import java.awt.Desktop;
+import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Toolkit;
+import java.awt.Window;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
@@ -17,11 +21,12 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.channels.FileChannel;
 import java.util.Scanner;
 
 import javax.imageio.ImageIO;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
 import net.lingala.zip4j.core.ZipFile;
@@ -37,22 +42,24 @@ public class Utility {
 	private ModManager McLauncher;
 	private String gamePath;
 	private String modPath;
+	private Console con;
 
 	public Utility(ModManager McLauncher) {
 		if(McLauncher!=null){
 			this.McLauncher = McLauncher;
 			gamePath = McLauncher.gamePath;
 			modPath = McLauncher.modPath;
+			con = McLauncher.con;
 		}
 	}
 	
 	private String getJsonFromZip(String path){
 		try {
 			ZipFile zipFile = new ZipFile(path);
-			System.out.println(path.substring(path.lastIndexOf('\\') + 1).replace(".zip","") + "\\info.json");
+			con.log("Log",path.substring(path.lastIndexOf('\\') + 1).replace(".zip","") + "\\info.json");
 			zipFile.extractFile(path.substring(path.lastIndexOf('\\') + 1).replace(".zip","") + "\\info.json", System.getProperty("java.io.tmpdir"));
 		} catch (ZipException e) {
-			System.out.println("Failed to unzip from getJsonFromZip");
+			con.log("Log","Failed to unzip from getJsonFromZip");
 		}
 		return null;
 	}
@@ -129,28 +136,28 @@ public class Utility {
 		
 		if(str1.length==3 && str2.length==3){ //then maybe we have #.#.#
 			if(Integer.parseInt(str1[0])>Integer.parseInt(str2[0])){
-				System.out.println("str1 higher1");
+				//con.log("Log","str1 higher1");
 				return true;
 				//if str1 is HIGHER than str2, its newer.
 			}
 			if(Integer.parseInt(str1[0])<Integer.parseInt(str2[0])){
-				System.out.println("str1 lower1");
+				//con.log("Log","str1 lower1");
 				return false;
 			}
 			if(Integer.parseInt(str1[1])>Integer.parseInt(str2[1])){
-				System.out.println("str1 higher2");
+				//con.log("Log","str1 higher2");
 				return true;
 			}
 			if(Integer.parseInt(str1[1])<Integer.parseInt(str2[1])){
-				System.out.println("str1 lower2");
+				//con.log("Log","str1 lower2");
 				return false;
 			}
 			if(Integer.parseInt(str1[2])>Integer.parseInt(str2[2])){
-				System.out.println("str1 higher3");
+				//con.log("Log","str1 higher3");
 				return true;
 			}
 			if(Integer.parseInt(str1[2])<Integer.parseInt(str2[2])){
-				System.out.println("str1 lower3");
+				//con.log("Log","str1 lower3");
 				return false;
 			}
 		}
@@ -222,7 +229,7 @@ public class Utility {
                 scanner = new Scanner(url.openStream(), "UTF-8");
                 scanner.useDelimiter("\\A");
                 String response = scanner.next();
-                System.out.println("SendDLReq... " + response);
+                con.log("Log","SendDLReq... " + response);
 
         } catch (Exception e) {
                 e.printStackTrace();
@@ -241,7 +248,7 @@ public class Utility {
                 scanner = new Scanner(url.openStream(), "UTF-8");
                 scanner.useDelimiter("\\A");
                 String response = scanner.next();
-                //System.out.println("GetModDownloads..." + response); //lets hide this huge wall for now
+                //con.log("Log","GetModDownloads..." + response); //lets hide this huge wall for now
                 return response;
         } catch (Exception e) {
                 e.printStackTrace();
@@ -279,7 +286,7 @@ public class Utility {
 				if(str.contains(".")){
 				String[] temp = str.split("_");
 				if(temp.length==2){
-					System.out.println("DEBUG1: " + temp[0]);
+					con.log("Log","DEBUG1: " + temp[0]);
 					return temp[0]; //return first split because we had a version
 				}
 				else if(temp[temp.length-1].contains(".")){ //make sure the mod doesnt have extra _ in the name
@@ -290,12 +297,12 @@ public class Utility {
 							sb+="_";
 						}
 					}
-					System.out.println("DEBUG2: " + sb);
+					con.log("Log","DEBUG2: " + sb);
 					return sb;
 				}
 			}
 		}
-		System.out.println("DEBUG3: " + str);
+		con.log("Log","DEBUG3: " + str);
 		return str;
 	}
 	

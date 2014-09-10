@@ -33,6 +33,7 @@ private int downloaded; // number of bytes downloaded
 private int status; // current status of download
 private String gamePath;
 private ModManager McLauncher;
+private Console con;
 
 // Constructor for Download.
 public Download(URL url, ModManager McLauncher) {
@@ -43,6 +44,7 @@ public Download(URL url, ModManager McLauncher) {
     //gamePath = McLauncher.gamePath;
     gamePath = System.getProperty("java.io.tmpdir");
     this.McLauncher = McLauncher;
+    con = McLauncher.con;
 
     // Begin the download.
     download();
@@ -188,7 +190,7 @@ public void run() {
                 file=null;
                 McLauncher.lblDownloadModInfo.setText("Extracting...");
             	UnZip zip = new UnZip();
-            	System.out.println(gamePath+"\\"+getFileName(url));
+            	con.log("Log",gamePath+"\\"+getFileName(url));
             	zip.unZipIt(McLauncher,gamePath+"\\"+getFileName(url),McLauncher.modPath);
 
             	//File f = new File(gamePath+"\\"+getFileName(url));
