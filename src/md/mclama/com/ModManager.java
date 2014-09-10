@@ -83,7 +83,7 @@ public class ModManager extends JFrame{
 	 */
 	public static final long serialVersionUID = 1L;
 
-	static final String McVersion = "0.4.1"; //Build 14
+	static final String McVersion = "0.4.1"; //Build 16
 	static final String McCheckVersionPath = "http://mclama.com/McLauncher/McLauncher%20Version.txt";
 	static final String McLauncherPath = "http://mclama.com/McLauncher/Downloads/McLauncher.jar";
 	static final String McUpdaterPath = "http://mclama.com/McLauncher/Downloads/McLauncher.jar";
@@ -834,6 +834,14 @@ public class ModManager extends JFrame{
 	}
 
 	private void init() {
+		File f = new File(gamePath); //Check if we have read and write access
+		if(f.canWrite() & f.canRead()) {
+		  System.out.println("Access to read and write allowed");
+		} else {
+			JOptionPane.showMessageDialog(null, "McLauncher does not have access to read or write files.\nMclauncher wont work without access.");
+			System.exit(0);
+		}
+		
 		try {
 			util = new Utility(this); //Utility class
 			String out = new Scanner(new URL(McCheckVersionPath).openStream(), "UTF-8").useDelimiter("\\A").next();

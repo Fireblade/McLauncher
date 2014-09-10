@@ -241,7 +241,7 @@ public class Utility {
                 scanner = new Scanner(url.openStream(), "UTF-8");
                 scanner.useDelimiter("\\A");
                 String response = scanner.next();
-                System.out.println("GetModDownloads..." + response);
+                //System.out.println("GetModDownloads..." + response); //lets hide this huge wall for now
                 return response;
         } catch (Exception e) {
                 e.printStackTrace();

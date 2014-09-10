@@ -108,6 +108,8 @@ public class UnZip
  
     }catch(IOException ex){
        ex.printStackTrace(); 
+       McLauncher.canDownloadMod=true;
+       McLauncher.lblDownloadModInfo.setText("Failed to extract");
     }
    }
 
