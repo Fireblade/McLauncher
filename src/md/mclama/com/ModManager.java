@@ -86,14 +86,14 @@ public class ModManager extends JFrame{
 	 */
 	public static final long serialVersionUID = 1L;
 
-	static final String McVersion = "0.4.2"; //Build 17
+	static final String McVersion = "0.4.2"; //Build 18
 	static final String McCheckVersionPath = "http://mclama.com/McLauncher/McLauncher%20Version.txt";
 	static final String McLauncherPath = "http://mclama.com/McLauncher/Downloads/McLauncher.jar";
 	static final String McUpdaterPath = "http://mclama.com/McLauncher/Downloads/McLauncher.jar";
 	private final boolean testBtnEnabled=false; //a test button that is to be removed on release
 	
 	public ModManager McLauncher = this;
-	public Utility util = new Utility(this); //Utility class
+	public Utility util;
 
 	private JPanel contentPane;
 	private DefaultListModel<String> listModel;
@@ -139,7 +139,7 @@ public class ModManager extends JFrame{
 	private BufferedImage modImg;
 	private JPanel panelModImg;
 	private JTextField txtFilterText;
-	private String[] dlModList;
+	protected String[] dlModList;
 	private DefaultTableModel dlModel;
 	private JLabel lblModDlCounter;
 	private JTextArea txtrDMModDescription;
@@ -177,6 +177,8 @@ public class ModManager extends JFrame{
 	protected String modPath;
 	
 	public static Console con;
+	private JSeparator separator_4;
+	private JToggleButton tglbtnAlertOnModUpdateAvailable;
 
 	/**
 	 * Launch the application.
@@ -700,6 +702,7 @@ public class ModManager extends JFrame{
 		panel.add(lblNeedrestart);
 		
 		tglbtnSendAnonData = new JToggleButton("Toggle");
+		tglbtnSendAnonData.setSelected(true); //set enabled by default.
 		tglbtnSendAnonData.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				writeData();
@@ -724,6 +727,24 @@ public class ModManager extends JFrame{
 		});
 		tglbtnDeleteBeforeUpdate.setBounds(622, 28, 66, 28);
 		panel.add(tglbtnDeleteBeforeUpdate);
+		
+		tglbtnAlertOnModUpdateAvailable = new JToggleButton("Toggle");
+		tglbtnAlertOnModUpdateAvailable.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				writeData();
+			}
+		});
+		tglbtnAlertOnModUpdateAvailable.setSelected(true);
+		tglbtnAlertOnModUpdateAvailable.setBounds(281, 86, 66, 28);
+		panel.add(tglbtnAlertOnModUpdateAvailable);
+		
+		separator_4 = new JSeparator();
+		separator_4.setBounds(0, 112, 676, 24);
+		panel.add(separator_4);
+		
+		JLabel lblAlertModHas = new JLabel("Alert mod has update on launch?");
+		lblAlertModHas.setBounds(6, 92, 231, 16);
+		panel.add(lblAlertModHas);
 		btnLaunchIgnore.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if(selProfile!=null){
@@ -769,8 +790,9 @@ public class ModManager extends JFrame{
 
 
 		readData(); //Load settings
-		getMods();  //Get the mods the user has installed
+
 		init();     //some extra init
+		getMods();  //Get the mods the user has installed
 	}
 
 	protected void testButtonCode(ActionEvent e) {
@@ -870,14 +892,7 @@ public class ModManager extends JFrame{
 	}
 
 	private void init() {
-		File f = new File(gamePath); //Check if we have read and write access
-		if(f.canWrite() & f.canRead()) {
-		  con.log("Log","Access to read and write allowed");
-		} else {
-			JOptionPane.showMessageDialog(null, "McLauncher does not have access to read or write files.\nMclauncher wont work without access.");
-			System.exit(0);
-		}
-		
+		util = new Utility(this);
 		try {
 			String out = new Scanner(new URL(McCheckVersionPath).openStream(), "UTF-8").useDelimiter("\\A").next();
 			con.log("Log","McLauncher version: " + McVersion + " Checked version: " +out);
@@ -940,6 +955,7 @@ public class ModManager extends JFrame{
 			panelModImg.removeAll();
 			panelModImg.add(new JLabel(new ImageIcon(modImg))); 
 		} catch (IOException e) {
+			con.log("Error", "Failed to set mod image.");
 			e.printStackTrace();
 		}
 	}
@@ -1065,16 +1081,20 @@ public class ModManager extends JFrame{
 	}
 
 	private void selectedProfile() {
-		String name = profileList.getSelectedValue().toString();
-		con.log("Log","Selected profile " + name);
-		for(int i=profiles.size()-1; i>=0; i--) {
-			Profile p = profiles.get(i);
-			if(name.equals(p.name)){
-				selProfile = p; //selected profile
-				i=0;
-				lblModsEnabled.setText("Enabled Mods: "+selProfile.mods.size());
-				updateEnabledMods();
+		try {
+			String name = profileList.getSelectedValue().toString();
+			con.log("Log","Selected profile " + name);
+			for(int i=profiles.size()-1; i>=0; i--) {
+				Profile p = profiles.get(i);
+				if(name.equals(p.name)){
+					selProfile = p; //selected profile
+					i=0;
+					lblModsEnabled.setText("Enabled Mods: "+selProfile.mods.size());
+					updateEnabledMods();
+				}
 			}
+		} catch (Exception e) {
+			con.log("Warning", "Failed to select the previously selected profile on launch");
 		}
 	}
 
@@ -1155,6 +1175,7 @@ public class ModManager extends JFrame{
 			if(gamePath==null) gamePath = (String) parser.parse(new FileReader("."));
 			txtGamePath.setText(gamePath);
 			con.log("Log","game path set to..." + gamePath);
+			checkAccess();
 			
 			String tempPath = System.getenv("APPDATA") + "\\factorio\\mods\\";
 			con.log("Log","Mods folder set to ... " + tempPath);
@@ -1162,6 +1183,7 @@ public class ModManager extends JFrame{
 				modPath = tempPath;
 			}
 			else {modPath = gamePath + "\\mods\\";}
+			
 			
 			String lastProfile = (String) factObj.get("lastprofile");
 			//Options tab
@@ -1171,8 +1193,9 @@ public class ModManager extends JFrame{
 				tglbtnCloseAfterUpdate.setSelected((boolean) factObj.get("closeAfterUpdate"));
 				tglbtnSendAnonData.setSelected((boolean) factObj.get("sendAnonData"));
 				tglbtnDeleteBeforeUpdate.setSelected((boolean) factObj.get("deleteBeforeUpdate"));
+				tglbtnAlertOnModUpdateAvailable.setSelected((boolean) factObj.get("AlertOnModUpdateAvailable"));
 			} catch (Exception e1) {
-				con.log("Warning","Failed to read some data, Possible update?");
+				con.log("Warning","Failed to read some data. Was McLauncher updated?");
 			}
 			
 			
@@ -1223,7 +1246,11 @@ public class ModManager extends JFrame{
 			
 			 
 		} catch (FileNotFoundException e) {
-		 e.printStackTrace();
+			con.log("Log", "McLauncher.json not found, Saving first-time info.");
+			newProfile("First profile");
+			profileList.setSelectedValue(profileListMdl.lastElement(), true);
+			selectedProfile();
+			writeData();
 		 } catch (IOException e) {
 		 e.printStackTrace();
 		 } catch (ParseException e) {
@@ -1246,6 +1273,7 @@ public class ModManager extends JFrame{
 		data.put("closeAfterUpdate", tglbtnCloseAfterUpdate.isSelected());
 		data.put("sendAnonData", tglbtnSendAnonData.isSelected());
 		data.put("deleteBeforeUpdate", tglbtnDeleteBeforeUpdate.isSelected());
+		data.put("AlertOnModUpdateAvailable", tglbtnAlertOnModUpdateAvailable.isSelected());
 		//put list into data
 		dlist.add(data);
 		
@@ -1278,7 +1306,7 @@ public class ModManager extends JFrame{
 			 file.flush();
 			 file.close();
 		 } catch (IOException e) {
-			 con.log("Log","FAILED to save McLauncher data");
+			 con.log("Severe","FAILED to save McLauncher data");
 			 e.printStackTrace();
 		 }
 		 con.log("Log","Saved McLauncher data.");
@@ -1344,10 +1372,17 @@ public class ModManager extends JFrame{
 
 	private void getCurrentMods() {
 		listModel.removeAllElements();
+		String updateableMods="";
 		if(modDir!=null){
 			listModel.addElement("base");
 			for(int i=0; i<modDir.length; i++){
 				listModel.addElement(modDir[i]);
+				String modname = modDir[i];
+				if(tglbtnAlertOnModUpdateAvailable.isSelected()) {updateableMods += util.checkModForUpdate(modname);} //Check if the mod has an update
+			}
+			if(tglbtnAlertOnModUpdateAvailable.isSelected()){
+				if(!updateableMods.equals(""))
+					JOptionPane.showMessageDialog(null, "The following mods can be updated.\n" + updateableMods);
 			}
 		}
 		else {
@@ -1356,6 +1391,18 @@ public class ModManager extends JFrame{
 			listModel.addElement("G:\\Games\\Factorio_0.9.8.9400");
 		}
 		
+	}
+	
+	private void checkAccess(){
+		if(!(gamePath.equals("") | gamePath==null)){
+			File f = new File(gamePath); //Check if we have read and write access
+			if(f.canWrite() & f.canRead()) {
+			  con.log("Log","Access to read and write allowed");
+			} else {
+				JOptionPane.showMessageDialog(null, "McLauncher does not have access to read or write files.\nMclauncher wont work without access.");
+				System.exit(0);
+			}
+		}
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -1383,7 +1430,7 @@ public class ModManager extends JFrame{
 					 file.close();
 					 con.log("Log","Saved mod-list.json    " + modPath+"mod-list.json");
 				 } catch (IOException e) {
-					 e.printStackTrace();
+					 con.log("Severe", "Failed to save mod-list.json, Maybe no write access?");
 				 }
 			}
 			 

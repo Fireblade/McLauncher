@@ -42,7 +42,7 @@ public class Utility {
 	private ModManager McLauncher;
 	private String gamePath;
 	private String modPath;
-	private Console con;
+	private static Console con;
 
 	public Utility(ModManager McLauncher) {
 		if(McLauncher!=null){
@@ -59,7 +59,7 @@ public class Utility {
 			con.log("Log",path.substring(path.lastIndexOf('\\') + 1).replace(".zip","") + "\\info.json");
 			zipFile.extractFile(path.substring(path.lastIndexOf('\\') + 1).replace(".zip","") + "\\info.json", System.getProperty("java.io.tmpdir"));
 		} catch (ZipException e) {
-			con.log("Log","Failed to unzip from getJsonFromZip");
+			con.log("Severe","Failed to unzip from getJsonFromZip");
 		}
 		return null;
 	}
@@ -128,36 +128,36 @@ public class Utility {
 		return false;
 	}
 
-	public boolean newerVersion(String version, String testv){
-		if(testSameVersion(version,testv)) return true;
+	public boolean newerVersion(String version, String testv){ //You are testing if arg0 is higher than arg1
+		if(testSameVersion(version,testv)) return false; //if its the same version, its not new.
 		String[] str1 = version.split("\\.");
 		String[] str2 = testv.split("\\.");
 		
 		
 		if(str1.length==3 && str2.length==3){ //then maybe we have #.#.#
 			if(Integer.parseInt(str1[0])>Integer.parseInt(str2[0])){
-				//con.log("Log","str1 higher1");
+				//con.log("Debug","str1 higher1");
 				return true;
 				//if str1 is HIGHER than str2, its newer.
 			}
 			if(Integer.parseInt(str1[0])<Integer.parseInt(str2[0])){
-				//con.log("Log","str1 lower1");
+				//con.log("Debug","str1 lower1");
 				return false;
 			}
 			if(Integer.parseInt(str1[1])>Integer.parseInt(str2[1])){
-				//con.log("Log","str1 higher2");
+				//con.log("Debug","str1 higher2");
 				return true;
 			}
 			if(Integer.parseInt(str1[1])<Integer.parseInt(str2[1])){
-				//con.log("Log","str1 lower2");
+				//con.log("Debug","str1 lower2");
 				return false;
 			}
 			if(Integer.parseInt(str1[2])>Integer.parseInt(str2[2])){
-				//con.log("Log","str1 higher3");
+				//con.log("Debug","str1 higher3");
 				return true;
 			}
 			if(Integer.parseInt(str1[2])<Integer.parseInt(str2[2])){
-				//con.log("Log","str1 lower3");
+				//con.log("Debug","str1 lower3");
 				return false;
 			}
 		}
@@ -286,7 +286,7 @@ public class Utility {
 				if(str.contains(".")){
 				String[] temp = str.split("_");
 				if(temp.length==2){
-					con.log("Log","DEBUG1: " + temp[0]);
+					//con.log("Debug",temp[0]);
 					return temp[0]; //return first split because we had a version
 				}
 				else if(temp[temp.length-1].contains(".")){ //make sure the mod doesnt have extra _ in the name
@@ -297,12 +297,12 @@ public class Utility {
 							sb+="_";
 						}
 					}
-					con.log("Log","DEBUG2: " + sb);
+					//con.log("Debug",sb);
 					return sb;
 				}
 			}
 		}
-		con.log("Log","DEBUG3: " + str);
+		//con.log("Debug",str);
 		return str;
 	}
 	
@@ -329,7 +329,7 @@ public class Utility {
 	    try {
 	        openWebpage(url.toURI());
 	    } catch (URISyntaxException e) {
-	        e.printStackTrace();
+	        con.log("Warning", "Failed to open webpage.");
 	    }
 	}
 
@@ -368,5 +368,39 @@ public class Utility {
 		}
 		return false;
 	}
+
+	public boolean modIsInstalled(String modname) { //Returns true if we found the mod name in the mods folder
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	//0modname, 1author, 2version, 3mod_tags, 4description, 5required_mods, 
+	//6updates, 7download_url, 8update_url, 9icon_url, 10downloads, 11mod_page, 12copyright
+	public String checkModForUpdate(String modname) {
+		String modversion = getModVersion(modname);
+		String version = getDLModVersion(modname);
+		//con.log("Debug",version);
+		if(newerVersion(version,modversion)){ //if database higher version, we have an update.
+			return (modname + "_" + modversion + " to " + version + "\n");
+		}
+		return "";
+	}
+	
+	public String getDLModVersion(String modname){
+		for(int i=0; i<McLauncher.dlModList.length; i++){
+			String[] modData = McLauncher.dlModList[0].split("~");
+			if(remVer(modData[0].toLowerCase()).equals(modname)){
+				return modData[2];
+			}
+		}
+		
+		return "";
+	}
+
+	public void modUpdateAvailable(String modname) {
+		// TODO Auto-generated method stub
+		
+	}
+	
 	
 }

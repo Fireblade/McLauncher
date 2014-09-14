@@ -64,7 +64,7 @@ public class UnZip
     	   String fileName = ze.getName();
            File newFile = new File(outputFolder + File.separator + fileName);
  
-           con.log("Log","file unzip : "+ newFile.getAbsoluteFile());
+           //con.log("Log","file unzip : "+ newFile.getAbsoluteFile()); //Commented out, downloading 10+ mods used up large memory
            numberOfEntries++;
            McLauncher.pBarExtractMod.setValue((numberOfEntries/numMax)*100);
             //create all non exists folders
@@ -112,6 +112,7 @@ public class UnZip
        ex.printStackTrace(); 
        McLauncher.canDownloadMod=true;
        McLauncher.lblDownloadModInfo.setText("Failed to extract");
+       con.log("Severe", "Failed to extract... " + zipFile);
     }
    }
 
