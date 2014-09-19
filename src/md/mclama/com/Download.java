@@ -74,6 +74,7 @@ public int getStatus() {
 public void pause() {
     status = PAUSED;
     stateChanged();
+    con.log("log","download paused");
 }
 
 // Resume this download.
@@ -87,16 +88,19 @@ public void resume() {
 public void cancel() {
     status = CANCELLED;
     stateChanged();
+    con.log("log","download canceled");
 }
 
 // Mark this download as having an error.
 private void error() {
     status = ERROR;
     stateChanged();
+    con.log("Error","Download error");
 }
 
 // Start or resume downloading.
 private void download() {
+	con.log("log","Starting download.");
 	McLauncher.lblDownloadModInfo.setText("Downloading...");
 	McLauncher.pBarDownloadMod.setValue(0);
 	McLauncher.pBarExtractMod.setValue(0);
@@ -188,6 +192,7 @@ public void run() {
             try {
                 file.close();
                 file=null;
+                con.log("log","download finished. Extracting now.");
                 McLauncher.lblDownloadModInfo.setText("Extracting...");
             	UnZip zip = new UnZip();
             	con.log("Log",gamePath+"\\"+getFileName(url));

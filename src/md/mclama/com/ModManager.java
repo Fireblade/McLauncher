@@ -86,7 +86,7 @@ public class ModManager extends JFrame{
 	 */
 	public static final long serialVersionUID = 1L;
 
-	static final String McVersion = "0.4.2"; //Build 18
+	static final String McVersion = "0.4.3"; //Build 19
 	static final String McCheckVersionPath = "http://mclama.com/McLauncher/McLauncher%20Version.txt";
 	static final String McLauncherPath = "http://mclama.com/McLauncher/Downloads/McLauncher.jar";
 	static final String McUpdaterPath = "http://mclama.com/McLauncher/Downloads/McLauncher.jar";
@@ -426,6 +426,7 @@ public class ModManager extends JFrame{
 			public void actionPerformed(ActionEvent e) {
 				boolean changeto = !con.isVisible();
 				con.setVisible(changeto);
+				con.updateConsole();
 			}
 		});
 		btnConsole.setBounds(335, 0, 90, 28);
@@ -467,11 +468,7 @@ public class ModManager extends JFrame{
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				trow = tableDownloads.rowAtPoint(e.getPoint()); //set new table row
-				//trow = tableDownloads.getRowSorter().convertRowIndexToView(tableDownloads.rowAtPoint(e.getPoint()));
-				//con.log("Log","ROW AT : " + trow);
-				//getDlModData();
 				trow = tableDownloads.getRowSorter().convertRowIndexToModel(trow);
-				con.log("Log","ROW AT : " + trow);
 				//findModInDownloads(dlModel.getValueAt(tableDownloads.rowAtPoint(e.getPoint(),0).toString());
 				getDlModData();
 				canDownloadMod=true;
@@ -610,7 +607,7 @@ public class ModManager extends JFrame{
 		lblDLModLicense.setBounds(403, 294, 285, 16);
 		panelDownloadMods.add(lblDLModLicense);
 		
-		lblWipmod = new JLabel("WIP Mod!");
+		lblWipmod = new JLabel("");
 		lblWipmod.setBounds(397, 314, 51, 16);
 		panelDownloadMods.add(lblWipmod);
 		
@@ -829,7 +826,7 @@ public class ModManager extends JFrame{
 		if(util.getStringWidth("Mod Description: " + modData[4])>800){
 			txtrDMModDescription.setFont(new Font("SansSerif", Font.PLAIN, 10));
 		} else txtrDMModDescription.setFont(new Font("SansSerif", Font.PLAIN, 12));
-		con.log("Log",util.getStringWidth("Mod Description: " + modData[4])+"");
+		con.log("Log","Selected downloadable mod " + modData[0]);
 		
 		txtrDMModDescription.setText("Mod Description: " + modData[4]);
 		lblDMRequiredMods.setText("Required Mods: " + modData[5]);
@@ -1163,7 +1160,7 @@ public class ModManager extends JFrame{
 		try {
 		 
 			Object obj = parser.parse(new FileReader("McLauncher.json"));
-			con.log("Log","jar path.." + new File(ModManager.class.getProtectionDomain().getCodeSource().getLocation().getPath()));
+			con.log("Log","Running McLauncher from " + new File(ModManager.class.getProtectionDomain().getCodeSource().getLocation().getPath()));
 			 
 			JSONObject jsonObject = (JSONObject) obj;
 			 
@@ -1181,8 +1178,14 @@ public class ModManager extends JFrame{
 			con.log("Log","Mods folder set to ... " + tempPath);
 			if(new File(tempPath).isDirectory()){
 				modPath = tempPath;
+				con.log("Log","Using installer factorio.");
 			}
-			else {modPath = gamePath + "\\mods\\";}
+			else {
+				modPath = gamePath + "\\mods\\";
+				con.log("Log","Using zip factorio.");
+			}
+			//This method fails if the user has both installed, and is running from the zip.
+			con.log("Log","Using mod path " + modPath);
 			
 			
 			String lastProfile = (String) factObj.get("lastprofile");

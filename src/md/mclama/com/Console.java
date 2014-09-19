@@ -3,6 +3,8 @@ package md.mclama.com;
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.ArrayList;
@@ -13,13 +15,12 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.EmptyBorder;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 
 public class Console extends JFrame {
 
@@ -30,6 +31,7 @@ public class Console extends JFrame {
 	
 	private List<String> logs = new ArrayList<String>(); 
 	private JScrollPane scrollPane_1;
+	private JScrollPane scrollPane;
 
 	/**
 	 * Launch the application.
@@ -51,6 +53,12 @@ public class Console extends JFrame {
 	 * Create the frame.
 	 */
 	public Console() {
+		addFocusListener(new FocusAdapter() {
+			@Override
+			public void focusGained(FocusEvent e) {
+				scrollConsole();
+			}
+		});
 		setTitle("McLauncher - Console");
 		setLocationRelativeTo(null);
 		addComponentListener(new ComponentAdapter() {
@@ -69,7 +77,7 @@ public class Console extends JFrame {
 		contentPane.setLayout(new BorderLayout(0, 0));
 		setContentPane(contentPane);
 		
-		JScrollPane scrollPane = new JScrollPane();
+		scrollPane = new JScrollPane();
 		contentPane.add(scrollPane, BorderLayout.CENTER);
 		
 		JPanel panel = new JPanel();
@@ -121,5 +129,11 @@ public class Console extends JFrame {
 			}
 		}
 		txtConsole.setText(str);
+		scrollConsole();
+	}
+
+	public void scrollConsole() {
+		JScrollBar vertical = scrollPane.getVerticalScrollBar();
+		vertical.setValue(vertical.getMaximum());
 	}
 }

@@ -50,13 +50,24 @@ public class Utility {
 			gamePath = McLauncher.gamePath;
 			modPath = McLauncher.modPath;
 			con = McLauncher.con;
+			
+			
+			if(System.getProperty("os.name").toLowerCase().contains("windows")){
+				con.log("Log","OS Windows");
+			}
+			else  if(System.getProperty("os.name").toLowerCase().contains("linux")){
+				con.log("Log","OS Linux");
+			}
+			else  if(System.getProperty("os.name").toLowerCase().contains("mac")){
+				con.log("Log","OS Mac");
+			}
 		}
 	}
 	
 	private String getJsonFromZip(String path){
 		try {
 			ZipFile zipFile = new ZipFile(path);
-			con.log("Log",path.substring(path.lastIndexOf('\\') + 1).replace(".zip","") + "\\info.json");
+			//con.log("Log",path.substring(path.lastIndexOf('\\') + 1).replace(".zip","") + "\\info.json");
 			zipFile.extractFile(path.substring(path.lastIndexOf('\\') + 1).replace(".zip","") + "\\info.json", System.getProperty("java.io.tmpdir"));
 		} catch (ZipException e) {
 			con.log("Severe","Failed to unzip from getJsonFromZip");

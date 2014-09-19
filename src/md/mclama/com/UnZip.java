@@ -57,7 +57,7 @@ public class UnZip
     	int numMax = zipp.size();
     	zipp.close();
     	zipp=null;
-    	con.log("Log","entries... " + numMax);
+    	con.log("Log","Files to extract: " + numMax);
  
     	while(ze!=null){
 
@@ -67,6 +67,7 @@ public class UnZip
            //con.log("Log","file unzip : "+ newFile.getAbsoluteFile()); //Commented out, downloading 10+ mods used up large memory
            numberOfEntries++;
            McLauncher.pBarExtractMod.setValue((numberOfEntries/numMax)*100);
+           McLauncher.lblDownloadModInfo.setText("Extracting " + numberOfEntries + "/" + numMax);
             //create all non exists folders
             //else you will hit FileNotFoundException for compressed folder
            if(ze.isDirectory()) 
@@ -99,8 +100,7 @@ public class UnZip
     	//con.log("Log",zipFile.substring(zipFile.lastIndexOf('\\') + 1));
     	String sendreq = util.remVer(zipFile.substring(zipFile.lastIndexOf('\\') + 1).replace(".zip",""));
     	util.SendDownloadRequest(URLEncoder.encode(sendreq, "UTF-8")+updateStr);
-    	con.log("Log","entries... now..." + numberOfEntries);
-    	con.log("Log","Done");
+    	con.log("Log","Done extracting");
     	McLauncher.lblDownloadModInfo.setText("Done");
     	McLauncher.downloading=false;
     	
