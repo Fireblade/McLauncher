@@ -176,6 +176,7 @@ public void run() {
             downloaded += read;
             stateChanged();
             McLauncher.pBarDownloadMod.setValue((int) getProgress());
+            McLauncher.lblDownloadModInfo.setText("Downloading... " + displaySize(downloaded) + "/" + displaySize(size));
         }
 
   /* Change status to complete if this point was
@@ -210,6 +211,27 @@ public void run() {
             } catch (Exception e) {}
         }
     }
+}
+
+private String displaySize(int iSize){
+	int divby =0;
+	
+	while(iSize>=1024){
+		iSize = iSize/1024;
+		divby++;
+	}
+	
+	switch(divby){
+		case 0:
+			return iSize+""; //bytes
+		case 1:
+			return iSize+"kB";
+		case 2:
+			return iSize+"mB"; //bytes
+	}
+	
+	
+	return "0";
 }
 
 // Notify observers that this download's status has changed.

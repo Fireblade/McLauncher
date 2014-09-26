@@ -97,7 +97,7 @@ public class Utility {
 			} 
 			else if(modName.contains(".zip")){
 				getJsonFromZip(modPath + modName);
-				obj = parser.parse(new FileReader(System.getProperty("java.io.tmpdir") + modName.replace(".zip", "") + "/info.json"));
+				obj = parser.parse(new FileReader(System.getProperty("java.io.tmpdir") + "/" + modName.replace(".zip", "") + "/info.json"));
 			}	else obj = parser.parse(new FileReader(modPath + modName + "/info.json"));
 			 
 			JSONObject jsonObject = (JSONObject) obj;
@@ -123,11 +123,17 @@ public class Utility {
 			Object obj;
 			if(modName.contains(".zip")){
 				getJsonFromZip(modPath + modName);
-				obj = parser.parse(new FileReader(System.getProperty("java.io.tmpdir") + modName.replace(".zip", "") + "/info.json"));
+				obj = parser.parse(new FileReader(System.getProperty("java.io.tmpdir") + "/" + modName.replace(".zip", "") + "/info.json"));
 			}	else obj = parser.parse(new FileReader(modPath + modName + "/info.json"));
 			JSONObject jsonObject = (JSONObject) obj;
 			
-			JSONArray jsonArray = (JSONArray) jsonObject.get("dependencies");
+			JSONArray jsonArray;
+			try {
+				jsonArray = (JSONArray) jsonObject.get("dependencies");
+			} catch (Exception e) {
+				return jsonObject.get("dependencies").toString();
+				//if its not an array its just a single mod
+			}
 			
 			
 			if(jsonArray!=null) return jsonArray.toString().toLowerCase();
@@ -135,10 +141,13 @@ public class Utility {
 		
 			
 		} catch (FileNotFoundException e) {
+			con.log("Warning", "getModDependency no file found");
 			return "";
 		} catch (IOException e) {
-			e.printStackTrace();
+			con.log("Warning", "getModDependency IOException");
+			return "";
 		} catch (ParseException e) {
+			con.log("Warning", "getModDependency ParseException");
 			return "";
 		}
 		
@@ -305,8 +314,9 @@ public class Utility {
 	}
 	
 	public String remVer(String str){ //remove version at the end of the mod name
+		str = str.replace(".zip","");
 		if(str.contains("_")){
-				if(str.contains(".")){
+			if(str.contains(".")){
 				String[] temp = str.split("_");
 				if(temp.length==2){
 					//con.log("Debug",temp[0]);
@@ -422,5 +432,6 @@ public class Utility {
 		
 	}
 	
+
 	
 }

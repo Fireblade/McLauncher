@@ -77,7 +77,9 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.JScrollBar;
+
 import java.awt.FlowLayout;
+
 import javax.swing.BoxLayout;
 
 
@@ -88,7 +90,7 @@ public class ModManager extends JFrame{
 	 */
 	public static final long serialVersionUID = 1L;
 
-	static final String McVersion = "0.4.4"; //Build 20
+	static final String McVersion = "0.4.5"; //Build 21
 	static final String McCheckVersionPath = "http://mclama.com/McLauncher/McLauncher%20Version.txt";
 	static final String McLauncherPath = "http://mclama.com/McLauncher/Downloads/McLauncher.jar";
 	static final String McUpdaterPath = "http://mclama.com/McLauncher/Downloads/McLauncher.jar";
@@ -183,11 +185,25 @@ public class ModManager extends JFrame{
 	protected JToggleButton tglbtnAlertOnModUpdateAvailable;
 	private JPanel panelChangelog;
 	private JTextArea textChangelog;
+	private JScrollPane scrollPane_6;
+
+	protected long lastClickTime=0;
 
 	/**
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
+		//Not added because i do not want to lock people out from using McLauncher if somehow this fails.
+//		if(new File(System.getProperty("java.io.tmpdir") + "/McLauncher.lock").exists()){
+//			System.exit(0);//close this instance if McLauncher is already running.
+//		}
+//		try {
+//			FileWriter file = new FileWriter(System.getProperty("java.io.tmpdir") + "/McLauncher.lock");
+//			file.write("McLauncher one instance lock");
+//			file.close();
+//		} catch (IOException e) {
+//			System.out.println("Severe, failed to create temp lock file");
+//		}
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -258,6 +274,7 @@ public class ModManager extends JFrame{
 		scrollPane.setBounds(556, 36, 132, 248);
 		panelLauncher.add(scrollPane);
 		profileList = new JList<String>(profileListMdl);
+		profileList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		scrollPane.setViewportView(profileList);
 		
 		btnNewProfile = new JButton("New");
@@ -342,6 +359,7 @@ public class ModManager extends JFrame{
 		scrollPane_1.setBounds(0, 167, 211, 165);
 		panelLauncher.add(scrollPane_1);
 		modsList = new JList<String>(listModel);
+		modsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		modsList.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
@@ -351,6 +369,10 @@ public class ModManager extends JFrame{
 				if(modName.contains(".zip")){
 					new File(System.getProperty("java.io.tmpdir") + modName.replace(".zip", "")).delete();
 				}
+				if(System.currentTimeMillis()-lastClickTime<=300){ //Double click
+					addMod();
+				}
+				lastClickTime = System.currentTimeMillis();
 			}
 		});
 		scrollPane_1.setViewportView(modsList);
@@ -360,11 +382,16 @@ public class ModManager extends JFrame{
 		scrollPane_2.setBounds(333, 167, 211, 165);
 		panelLauncher.add(scrollPane_2);
 		enabledModsList = new JList<String>(ModListModel);
+		enabledModsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		enabledModsList.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				lblModVersion.setText("Mod Version: " + util.getModVersion(enabledModsList.getSelectedValue()));
 				checkDependency(enabledModsList);
+				if(System.currentTimeMillis()-lastClickTime<=300){ //Double click
+					removeMod();
+				}
+				lastClickTime = System.currentTimeMillis();
 			}
 		});
 		enabledModsList.setFont(new Font("SansSerif", Font.PLAIN, 10));
@@ -422,7 +449,9 @@ public class ModManager extends JFrame{
 		panelLauncher.add(lblModRequires);
 		
 		btnLaunchIgnore = new JButton("Launch + ignore");
-		btnLaunchIgnore.setBounds(566, 284, 123, 23);
+		btnLaunchIgnore.setToolTipText("Ignore any errors that McLauncher may not correctly account for.");
+		btnLaunchIgnore.setFont(new Font("SansSerif", Font.PLAIN, 11));
+		btnLaunchIgnore.setBounds(556, 284, 133, 23);
 		panelLauncher.add(btnLaunchIgnore);
 		
 		JButton btnConsole = new JButton("Console");
@@ -535,9 +564,9 @@ public class ModManager extends JFrame{
 		panelDownloadMods.add(pBarExtractMod);
 		
 		lblDownloadModInfo = new JLabel("Download progress");
-		lblDownloadModInfo.setBounds(538, 326, 150, 16);
+		lblDownloadModInfo.setBounds(489, 326, 199, 16);
 		panelDownloadMods.add(lblDownloadModInfo);
-		lblDownloadModInfo.setHorizontalAlignment(SwingConstants.CENTER);
+		lblDownloadModInfo.setHorizontalAlignment(SwingConstants.TRAILING);
 		
 		panelModImg = new JPanel();
 		panelModImg.setBounds(566, 0, 128, 128);
@@ -687,8 +716,9 @@ public class ModManager extends JFrame{
 		panel.add(tglbtnDisplayoff);
 		
 		lblInfo = new JLabel("What enabled and disabled look like");
+		lblInfo.setFont(new Font("SansSerif", Font.PLAIN, 10));
 		lblInfo.setHorizontalAlignment(SwingConstants.TRAILING);
-		lblInfo.setBounds(391, 314, 199, 16);
+		lblInfo.setBounds(359, 314, 231, 16);
 		panel.add(lblInfo);
 		
 		JSeparator separator = new JSeparator();
@@ -762,10 +792,13 @@ public class ModManager extends JFrame{
 		tabbedPane.addTab("Changelog", null, panelChangelog, null);
 		panelChangelog.setLayout(new BoxLayout(panelChangelog, BoxLayout.X_AXIS));
 		
+		scrollPane_6 = new JScrollPane();
+		panelChangelog.add(scrollPane_6);
+		
 		textChangelog = new JTextArea();
+		scrollPane_6.setViewportView(textChangelog);
 		textChangelog.setEditable(false);
-		textChangelog.setText("v0.4.4\r\n\r\n+Changelog tab added. \r\n+Fix attempt for linux users not being able to do anything using paths.\r\n+Fix attempt for linux users GUI text in Options tab.\r\n+More support for optional mod dependency.\r\n+Up and down arrow will now work with Mod Downloads selecting.");
-		panelChangelog.add(textChangelog);
+		textChangelog.setText("v0.4.5\r\n\r\n+McLauncher should now correctly warn you on failed write/read access.\r\n+McLauncher should now work when a user has both zip and installer versions of factorio. (Thanks Jeroon)\r\n+Attempt to fix an error with dependency and .zip files, With versions. (Thanks Arano-kai)\r\n+Fix only allow single selection of mods. (Thanks Arano-kai)\r\n+Fix for the Launch+Ignore button problem on linux being cut off. (Thanks Arano-kai)\r\n+Display download progress.\r\n+Fixed an error that was thrown when clicking on some mods that had a single dependency mod.\r\n+Double clicking on a mod will now enable or disable the mod. (Thanks Arano-kai)\r\n\r\nv0.4.4\r\n\r\n+Changelog tab added. \r\n+Fix attempt for linux users not being able to do anything using paths.\r\n+Fix attempt for linux users GUI text in Options tab.\r\n+More support for optional mod dependency.\r\n+Up and down arrow will now work with Mod Downloads selecting.");
 		btnLaunchIgnore.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if(selProfile!=null){
@@ -1044,6 +1077,14 @@ public class ModManager extends JFrame{
 								requiredMods+=(depenMod+"_"+depenVers+", ");
 							}
 						}
+						else if(util.newerVersion(util.getModVersion(depenMod), depenVers) 
+								|| util.testSameVersion(util.getModVersion(depenMod), depenVers)){ 
+							//If installed version is newer or same version than required
+							//then do nothing
+						}
+						else {//else we require the mod
+							requiredMods+=(depenMod+"_"+depenVers+", ");
+						}
 					}
 				}
 				else { //if it does not require mod version
@@ -1064,7 +1105,7 @@ public class ModManager extends JFrame{
 	private boolean modIsEnabled(String depenMod) {
 		for(int i=selProfile.mods.size()-1; i>=0; i--) {
 			String p = selProfile.mods.get(i);
-			if(p.equals(depenMod)){  //if the mod is enabled
+			if(util.remVer(p).toLowerCase().equals(util.remVer(depenMod).toLowerCase())){  //if the mod is enabled
 				return true;
 			}
 		}
@@ -1212,17 +1253,7 @@ public class ModManager extends JFrame{
 			con.log("Log","game path set to..." + gamePath);
 			checkAccess();
 			
-			String tempPath = System.getenv("APPDATA") + "/factorio/mods/";
-			//con.log("Debug","Mods folder set to ... " + tempPath); //debug log
-			if(new File(tempPath).isDirectory()){
-				modPath = tempPath;
-				con.log("Log","Using installer factorio.");
-			}
-			else {
-				modPath = gamePath + "/mods/";
-				con.log("Log","Using zip factorio.");
-			}
-			//This method fails if the user has both installed, and is running from the zip.
+			validatePath();
 			con.log("Log","Using mod path " + modPath);
 			
 			
@@ -1403,6 +1434,8 @@ public class ModManager extends JFrame{
 	      con.log("Log",gamePath);
 	      txtGamePath.setText(gamePath);
 	      
+	      validatePath();
+	      checkAccess();
 	      getMods();
 	      }
 	    else {
@@ -1435,14 +1468,56 @@ public class ModManager extends JFrame{
 	}
 	
 	private void checkAccess(){
+		boolean tested=true;
 		if(!(gamePath.equals("") | gamePath==null)){
 			File f = new File(gamePath); //Check if we have read and write access
-			if(f.canWrite() & f.canRead()) {
-			  con.log("Log","Access to read and write allowed");
-			} else {
-				JOptionPane.showMessageDialog(null, "McLauncher does not have access to read or write files.\nMclauncher wont work without access.");
-				System.exit(0);
+			if(!f.canWrite() & !f.canRead()) {
+				tested=false; //if no access
+				con.log("Severe","Failed to write and read");
 			}
+		}
+		
+		try {
+			FileWriter file = new FileWriter(gamePath+"/testingmclauncherwriteacess.txt");
+			file.write("Testing Mclauncher");
+			file.close();
+		} catch (IOException e) {
+			tested=false; //failed to write
+			con.log("Severe","Failed write access.");
+		}
+		
+		if(!new File(gamePath+"/testingmclauncherwriteacess.txt").exists()){
+			tested=false; //failed to read
+			con.log("Severe","Failed read access.");
+			
+		} else new File(gamePath+"/testingmclauncherwriteacess.txt").delete();
+		
+		if(tested) {
+			con.log("Log","Access to read and write allowed.");
+		}
+		else {
+			JOptionPane.showMessageDialog(null, "McLauncher does not have access to read or write files.\nMclauncher will not work without access.");
+			//System.exit(0);
+		}
+	}
+	
+	public void validatePath() {
+		String testPath = gamePath;
+		if(testPath.equals("")){ 
+			JOptionPane.showMessageDialog(null, "Invalid game path.");
+		}
+		else { //If there is atleast some form of path here
+			if(new File(testPath + "/data").isDirectory()){
+				//Correct factorio path
+				if(new File(testPath + "/config.lnk").exists()){
+					//Then we are using the installer.
+					modPath = System.getenv("APPDATA") + "/factorio/mods/";
+					con.log("Log","Using installer factorio.");
+				}
+				else modPath = testPath + "/mods/";
+				con.log("Log","Using zip factorio.");
+			}
+			else JOptionPane.showMessageDialog(null, "Invalid game path.");
 		}
 	}
 	
