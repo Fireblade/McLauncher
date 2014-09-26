@@ -43,6 +43,7 @@ public class Utility {
 	private String gamePath;
 	private String modPath;
 	private static Console con;
+	//public String OS; //added but unused at the moment.
 
 	public Utility(ModManager McLauncher) {
 		if(McLauncher!=null){
@@ -54,12 +55,23 @@ public class Utility {
 			
 			if(System.getProperty("os.name").toLowerCase().contains("windows")){
 				con.log("Log","OS Windows");
+				//OS="win";
 			}
 			else  if(System.getProperty("os.name").toLowerCase().contains("linux")){
 				con.log("Log","OS Linux");
+				//OS="linux";
+				
+				Font linuxfont = new Font("SansSerif", Font.PLAIN, 11);
+				McLauncher.tglbtnNewModsFirst.setFont(linuxfont);
+				McLauncher.tglbtnCloseAfterLaunch.setFont(linuxfont);
+				McLauncher.tglbtnCloseAfterUpdate.setFont(linuxfont);
+				McLauncher.tglbtnSendAnonData.setFont(linuxfont);
+				McLauncher.tglbtnDeleteBeforeUpdate.setFont(linuxfont);
+				McLauncher.tglbtnAlertOnModUpdateAvailable.setFont(linuxfont);
 			}
 			else  if(System.getProperty("os.name").toLowerCase().contains("mac")){
 				con.log("Log","OS Mac");
+				//OS="mac";
 			}
 		}
 	}
@@ -67,8 +79,8 @@ public class Utility {
 	private String getJsonFromZip(String path){
 		try {
 			ZipFile zipFile = new ZipFile(path);
-			//con.log("Log",path.substring(path.lastIndexOf('\\') + 1).replace(".zip","") + "\\info.json");
-			zipFile.extractFile(path.substring(path.lastIndexOf('\\') + 1).replace(".zip","") + "\\info.json", System.getProperty("java.io.tmpdir"));
+			//con.log("Log",path.substring(path.lastIndexOf('/') + 1).replace(".zip","") + "/info.json");
+			zipFile.extractFile(path.substring(path.lastIndexOf('/') + 1).replace(".zip","") + "/info.json", System.getProperty("java.io.tmpdir"));
 		} catch (ZipException e) {
 			con.log("Severe","Failed to unzip from getJsonFromZip");
 		}
@@ -81,12 +93,12 @@ public class Utility {
 		try {
 			Object obj;
 			if(modName.equals("base")){
-				obj = parser.parse(new FileReader(gamePath + "\\data\\base\\info.json"));
+				obj = parser.parse(new FileReader(gamePath + "/data/base/info.json"));
 			} 
 			else if(modName.contains(".zip")){
 				getJsonFromZip(modPath + modName);
-				obj = parser.parse(new FileReader(System.getProperty("java.io.tmpdir") + modName.replace(".zip", "") + "\\info.json"));
-			}	else obj = parser.parse(new FileReader(modPath + modName + "\\info.json"));
+				obj = parser.parse(new FileReader(System.getProperty("java.io.tmpdir") + modName.replace(".zip", "") + "/info.json"));
+			}	else obj = parser.parse(new FileReader(modPath + modName + "/info.json"));
 			 
 			JSONObject jsonObject = (JSONObject) obj;
 			
@@ -111,8 +123,8 @@ public class Utility {
 			Object obj;
 			if(modName.contains(".zip")){
 				getJsonFromZip(modPath + modName);
-				obj = parser.parse(new FileReader(System.getProperty("java.io.tmpdir") + modName.replace(".zip", "") + "\\info.json"));
-			}	else obj = parser.parse(new FileReader(modPath + modName + "\\info.json"));
+				obj = parser.parse(new FileReader(System.getProperty("java.io.tmpdir") + modName.replace(".zip", "") + "/info.json"));
+			}	else obj = parser.parse(new FileReader(modPath + modName + "/info.json"));
 			JSONObject jsonObject = (JSONObject) obj;
 			
 			JSONArray jsonArray = (JSONArray) jsonObject.get("dependencies");
@@ -270,7 +282,7 @@ public class Utility {
 	}
 	
 	public String noteInfo(String what){
-		if(!System.getProperty("user.home").equals("C:\\Users\\fireblade") //Don't record stats if im... me, So much testing, so much falseness.
+		if(!System.getProperty("user.home").equals("C:/Users/fireblade") //Don't record stats if im... me, So much testing, so much falseness.
 				&& McLauncher.tglbtnSendAnonData.isSelected()){  //An option to let players send usage data anonymously.
 			URL url = null;
 	        String webpage = "http://www.mclama.com/McLauncher/Note" + what;
@@ -364,15 +376,12 @@ public class Utility {
 				  else return false;
 			  }
 			});
-		
 		for(int i=0; i<mods.length; i++){
 			String str = mods[i].replace(".zip","");
-			if(remVer(str.substring(str.lastIndexOf('\\') + 1)).equals(mod)){ //if the mod name is found
+			if(remVer(str.substring(str.lastIndexOf('/') + 1)).equals(mod)){ //if the mod name is found
 				return true;
 			}
 		}
-		
-		
 		if(foundit){
 			
 			return true;

@@ -77,6 +77,8 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.JScrollBar;
+import java.awt.FlowLayout;
+import javax.swing.BoxLayout;
 
 
 public class ModManager extends JFrame{
@@ -86,7 +88,7 @@ public class ModManager extends JFrame{
 	 */
 	public static final long serialVersionUID = 1L;
 
-	static final String McVersion = "0.4.3"; //Build 19
+	static final String McVersion = "0.4.4"; //Build 20
 	static final String McCheckVersionPath = "http://mclama.com/McLauncher/McLauncher%20Version.txt";
 	static final String McLauncherPath = "http://mclama.com/McLauncher/Downloads/McLauncher.jar";
 	static final String McUpdaterPath = "http://mclama.com/McLauncher/Downloads/McLauncher.jar";
@@ -161,11 +163,11 @@ public class ModManager extends JFrame{
 	private JLabel lblCloseMclauncherAfter;
 	private JLabel lblCloseMclauncherAfter_1;
 	private JLabel lblSortNewestDownloadable;
-	private JToggleButton tglbtnNewModsFirst;
+	protected JToggleButton tglbtnNewModsFirst;
 	protected JToggleButton tglbtnCloseAfterUpdate;
-	private JToggleButton tglbtnCloseAfterLaunch;
-	private JToggleButton tglbtnDisplayon;
-	private JToggleButton tglbtnDisplayoff;
+	protected JToggleButton tglbtnCloseAfterLaunch;
+	protected JToggleButton tglbtnDisplayon;
+	protected JToggleButton tglbtnDisplayoff;
 	private JLabel lblInfo;
 	private JComboBox comboBox;
 	private JLabel lblNeedrestart;
@@ -178,7 +180,9 @@ public class ModManager extends JFrame{
 	
 	public static Console con;
 	private JSeparator separator_4;
-	private JToggleButton tglbtnAlertOnModUpdateAvailable;
+	protected JToggleButton tglbtnAlertOnModUpdateAvailable;
+	private JPanel panelChangelog;
+	private JTextArea textChangelog;
 
 	/**
 	 * Launch the application.
@@ -467,9 +471,17 @@ public class ModManager extends JFrame{
 		tableDownloads.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				trow = tableDownloads.rowAtPoint(e.getPoint()); //set new table row
+				trow = tableDownloads.getSelectedRow();
 				trow = tableDownloads.getRowSorter().convertRowIndexToModel(trow);
-				//findModInDownloads(dlModel.getValueAt(tableDownloads.rowAtPoint(e.getPoint(),0).toString());
+				getDlModData();
+				canDownloadMod=true;
+			}
+		});
+		tableDownloads.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent e) {
+				trow = tableDownloads.getSelectedRow();
+				trow = tableDownloads.getRowSorter().convertRowIndexToModel(trow);
 				getDlModData();
 				canDownloadMod=true;
 			}
@@ -664,11 +676,13 @@ public class ModManager extends JFrame{
 		panel.add(tglbtnCloseAfterLaunch);
 		
 		tglbtnDisplayon = new JToggleButton("On");
+		tglbtnDisplayon.setFont(new Font("SansSerif", Font.PLAIN, 10));
 		tglbtnDisplayon.setSelected(true);
 		tglbtnDisplayon.setBounds(588, 308, 44, 28);
 		panel.add(tglbtnDisplayon);
 		
 		tglbtnDisplayoff = new JToggleButton("Off");
+		tglbtnDisplayoff.setFont(new Font("SansSerif", Font.PLAIN, 10));
 		tglbtnDisplayoff.setBounds(644, 308, 44, 28);
 		panel.add(tglbtnDisplayoff);
 		
@@ -699,6 +713,7 @@ public class ModManager extends JFrame{
 		panel.add(lblNeedrestart);
 		
 		tglbtnSendAnonData = new JToggleButton("Toggle");
+		tglbtnSendAnonData.setToolTipText("Information regarding the activity of McLauncher.");
 		tglbtnSendAnonData.setSelected(true); //set enabled by default.
 		tglbtnSendAnonData.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -709,11 +724,11 @@ public class ModManager extends JFrame{
 		panel.add(tglbtnSendAnonData);
 		
 		lblSendAnonymousUse = new JLabel("Send anonymous use data?");
-		lblSendAnonymousUse.setBounds(359, 6, 231, 16);
+		lblSendAnonymousUse.setBounds(359, 6, 251, 16);
 		panel.add(lblSendAnonymousUse);
 		
 		lblDeleteOldMod = new JLabel("Delete old mod before updating?");
-		lblDeleteOldMod.setBounds(359, 34, 180, 16);
+		lblDeleteOldMod.setBounds(359, 34, 251, 16);
 		panel.add(lblDeleteOldMod);
 		
 		tglbtnDeleteBeforeUpdate = new JToggleButton("Toggle");
@@ -742,6 +757,15 @@ public class ModManager extends JFrame{
 		JLabel lblAlertModHas = new JLabel("Alert mod has update on launch?");
 		lblAlertModHas.setBounds(6, 92, 231, 16);
 		panel.add(lblAlertModHas);
+		
+		panelChangelog = new JPanel();
+		tabbedPane.addTab("Changelog", null, panelChangelog, null);
+		panelChangelog.setLayout(new BoxLayout(panelChangelog, BoxLayout.X_AXIS));
+		
+		textChangelog = new JTextArea();
+		textChangelog.setEditable(false);
+		textChangelog.setText("v0.4.4\r\n\r\n+Changelog tab added. \r\n+Fix attempt for linux users not being able to do anything using paths.\r\n+Fix attempt for linux users GUI text in Options tab.\r\n+More support for optional mod dependency.\r\n+Up and down arrow will now work with Mod Downloads selecting.");
+		panelChangelog.add(textChangelog);
 		btnLaunchIgnore.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if(selProfile!=null){
@@ -963,7 +987,7 @@ public class ModManager extends JFrame{
 
 	protected String checkDependency(String[] depen) {
 		String requiredMods = "";
-		if(depen[0]!=""){
+		if(depen[0]!=""){ //if it does not equal nothing.
 			//con.log("Log","Dependency.. " + depen[0] + "-------" + depen[1]);
 			for(int i=0; i<depen.length; i++){
 				boolean optmod = false;
@@ -1001,14 +1025,28 @@ public class ModManager extends JFrame{
 				if(reqmv){
 					String depenVers = reqstr[1];
 					if(!optmod) depenMod = reqstr[0];
-					con.log("Log",depenMod + " with vers " + depenVers);
+					String requireStr = ("Requires mod " + depenMod + " with version " + depenVers + ".").replace("mod base", "Factorio");
+					if(optmod) {requireStr.replace("Requires ", "Optional mod requires ");}
+					con.log("Debug",requireStr);
 					if(!modIsEnabled(depenMod)){//if mod is not already enabled
 						if(!optmod){            //if its not a optional mod
 							requiredMods+=(depenMod+"_"+depenVers+", ");
 						}
 					}
+					else { //else if mod IS enabled
+						if(optmod){ //if mod is optional
+							if(util.newerVersion(util.getModVersion(depenMod), depenVers) 
+									|| util.testSameVersion(util.getModVersion(depenMod), depenVers)){ 
+								//If installed version is newer or same version than required
+								//then do nothing
+							}
+							else {//else we require the mod
+								requiredMods+=(depenMod+"_"+depenVers+", ");
+							}
+						}
+					}
 				}
-				else {
+				else { //if it does not require mod version
 					//con.log("Log",depen[i]);
 					if(!modIsEnabled(depen[i])){
 						requiredMods+=depen[i]+", ";
@@ -1018,7 +1056,7 @@ public class ModManager extends JFrame{
 			if(requiredMods.equals(", ") || requiredMods.equals("")) requiredMods="None or Already enabled";
 			lblModRequires.setText("Mod Requires: " + requiredMods);
 			return requiredMods;
-		}else con.log("Log","no mod dependency");
+		}else con.log("Debug","no mod dependency");
 		lblModRequires.setText("Mod Requires: None or Already enabled");
 		return "None or Already enabled";
 	}
@@ -1174,14 +1212,14 @@ public class ModManager extends JFrame{
 			con.log("Log","game path set to..." + gamePath);
 			checkAccess();
 			
-			String tempPath = System.getenv("APPDATA") + "\\factorio\\mods\\";
-			con.log("Log","Mods folder set to ... " + tempPath);
+			String tempPath = System.getenv("APPDATA") + "/factorio/mods/";
+			//con.log("Debug","Mods folder set to ... " + tempPath); //debug log
 			if(new File(tempPath).isDirectory()){
 				modPath = tempPath;
 				con.log("Log","Using installer factorio.");
 			}
 			else {
-				modPath = gamePath + "\\mods\\";
+				modPath = gamePath + "/mods/";
 				con.log("Log","Using zip factorio.");
 			}
 			//This method fails if the user has both installed, and is running from the zip.
@@ -1361,7 +1399,7 @@ public class ModManager extends JFrame{
 	         +  chooser.getSelectedFile());
 	      
 	      gamePath=""+chooser.getSelectedFile();
-	      if(gamePath.endsWith("\\mods")) {gamePath = gamePath.replace("\\mods", "");}
+	      if(gamePath.endsWith("/mods")) {gamePath = gamePath.replace("/mods", "");}
 	      con.log("Log",gamePath);
 	      txtGamePath.setText(gamePath);
 	      
@@ -1391,7 +1429,7 @@ public class ModManager extends JFrame{
 		else {
 			listModel.addElement("Please select a Game Path.");
 			listModel.addElement("An example would be:");
-			listModel.addElement("G:\\Games\\Factorio_0.9.8.9400");
+			listModel.addElement("G:/Games/Factorio_0.9.8.9400");
 		}
 		
 	}
@@ -1437,10 +1475,10 @@ public class ModManager extends JFrame{
 				 }
 			}
 			 
-			File fWindows = new File(gamePath + "\\bin\\win32\\Factorio.exe");
-			File fWindows64 = new File(gamePath + "\\bin\\x64\\Factorio.exe");
-			File fLinux = new File(gamePath+ "\\bin\\i386\\factorio");
-			File fLinux64 = new File(gamePath + "\\bin\\x64\\factorio");
+			File fWindows = new File(gamePath + "/bin/win32/Factorio.exe");
+			File fWindows64 = new File(gamePath + "/bin/x64/Factorio.exe");
+			File fLinux = new File(gamePath+ "/bin/i386/factorio");
+			File fLinux64 = new File(gamePath + "/bin/x64/factorio");
 			File fMac = new File(gamePath); 
 			 
 			if(System.getProperty("os.name").toLowerCase().contains("windows")){

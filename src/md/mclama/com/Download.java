@@ -151,7 +151,7 @@ public void run() {
 
         // Open file and seek to the end of it.
         //file = new RandomAccessFile(getFileName(url), "rw");
-        file = new RandomAccessFile(gamePath+"\\"+getFileName(url), "rw");
+        file = new RandomAccessFile(gamePath+"/"+getFileName(url), "rw");
         
         file.seek(downloaded);
 
@@ -195,8 +195,8 @@ public void run() {
                 con.log("log","download finished. Extracting now.");
                 McLauncher.lblDownloadModInfo.setText("Extracting...");
             	UnZip zip = new UnZip();
-            	con.log("Log",gamePath+"\\"+getFileName(url));
-            	zip.unZipIt(McLauncher,gamePath+"\\"+getFileName(url),McLauncher.modPath);
+            	con.log("Log",gamePath+"/"+getFileName(url));
+            	zip.unZipIt(McLauncher,gamePath+"/"+getFileName(url),McLauncher.modPath);
 
             	//File f = new File(gamePath+"\\"+getFileName(url));
             	//f.delete();

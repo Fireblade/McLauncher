@@ -34,7 +34,7 @@ public class UnZip
         con = McLauncher.con;
         
     	Utility util = new Utility(null);
-        updateStr = CheckIfUpdate(outputFolder, util.remVer(zipFile.substring(zipFile.lastIndexOf('\\') + 1).replace(".zip","")));
+        updateStr = CheckIfUpdate(outputFolder, util.remVer(zipFile.substring(zipFile.lastIndexOf('/') + 1).replace(".zip","")));
  
      byte[] buffer = new byte[1024];
  
@@ -97,8 +97,8 @@ public class UnZip
         zis.closeEntry();
     	zis.close();
     	zis=null;
-    	//con.log("Log",zipFile.substring(zipFile.lastIndexOf('\\') + 1));
-    	String sendreq = util.remVer(zipFile.substring(zipFile.lastIndexOf('\\') + 1).replace(".zip",""));
+    	//con.log("Log",zipFile.substring(zipFile.lastIndexOf('/') + 1));
+    	String sendreq = util.remVer(zipFile.substring(zipFile.lastIndexOf('/') + 1).replace(".zip",""));
     	util.SendDownloadRequest(URLEncoder.encode(sendreq, "UTF-8")+updateStr);
     	con.log("Log","Done extracting");
     	McLauncher.lblDownloadModInfo.setText("Done");
@@ -119,7 +119,7 @@ public class UnZip
 	private String CheckIfUpdate(String modFolder, String mod) {
 		boolean foundit=false;
 		
-		File oldMod = new File(modFolder+"\\"+mod);
+		File oldMod = new File(modFolder+"/"+mod);
 		if(oldMod.isDirectory()){
 			con.log("Log","IS DIRECTORY");
 			foundit=true;
