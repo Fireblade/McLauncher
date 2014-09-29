@@ -88,6 +88,7 @@ public void resume() {
 public void cancel() {
     status = CANCELLED;
     stateChanged();
+    McLauncher.CurrentlyDownloading=false;
     con.log("log","download canceled");
 }
 

@@ -1,6 +1,5 @@
 package md.mclama.com;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.EventQueue;
@@ -8,17 +7,31 @@ import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.RandomAccessFile;
+import java.io.Reader;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+import java.nio.channels.OverlappingFileLockException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,6 +40,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
+import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
@@ -40,12 +54,15 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
@@ -60,28 +77,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-
-import javax.swing.JToggleButton;
-import javax.swing.JSeparator;
-
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import java.awt.event.ItemListener;
-import java.awt.event.ItemEvent;
-
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ChangeEvent;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.JScrollBar;
-
-import java.awt.FlowLayout;
-
-import javax.swing.BoxLayout;
-
 
 public class ModManager extends JFrame{
 	
@@ -90,7 +85,7 @@ public class ModManager extends JFrame{
 	 */
 	public static final long serialVersionUID = 1L;
 
-	static final String McVersion = "0.4.5"; //Build 21
+	static final String McVersion = "0.4.6"; //Build 22
 	static final String McCheckVersionPath = "http://mclama.com/McLauncher/McLauncher%20Version.txt";
 	static final String McLauncherPath = "http://mclama.com/McLauncher/Downloads/McLauncher.jar";
 	static final String McUpdaterPath = "http://mclama.com/McLauncher/Downloads/McLauncher.jar";
@@ -156,7 +151,6 @@ public class ModManager extends JFrame{
 
 	protected boolean canDownloadMod=false;
 	private JLabel lblDLModLicense;
-	protected boolean downloading=false;
 
 	private URL modPageUrl;
 	private JPanel panelOptions;
@@ -189,10 +183,56 @@ public class ModManager extends JFrame{
 
 	protected long lastClickTime=0;
 
+	protected Download CurrentDownload;
+
+	public boolean CurrentlyDownloading=false;;
+	protected static FileLock lock=null;
+	protected static File workDir;
+
 	/**
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
+		try {
+			workDir=new File(ModManager.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath().replace("McLauncher.jar", ""));
+			System.out.println("Running McLauncher from " + workDir);
+		} catch (URISyntaxException e1) {
+			workDir=new File("");
+			e1.printStackTrace();
+		}
+//		try {
+//	        // Get a file channel for the file
+//			boolean FileNotLocked=false;
+//
+//	        
+//	        try {
+//				FileWriter file2 = new FileWriter(System.getProperty("java.io.tmpdir") + "/McLauncher.lock");
+//				file2.write("McLauncher lock");
+//				file2.close();
+//			} catch (IOException e) {
+//				FileNotLocked=true;
+//			}
+//	        
+//	        File file = new File(System.getProperty("java.io.tmpdir") + "/McLauncher.lock");
+//
+//	        FileChannel channel = new RandomAccessFile(file, "rw").getChannel();
+//	        if(file.renameTo(file)) FileNotLocked=true;
+//	        if(FileNotLocked){
+//	        	JOptionPane.showMessageDialog(null, "Already running McLauncher, Only one instance allowed at a time\n"
+//						+ "Is this wrong? Delete McLauncher.lock in your temp folder");
+//				System.out.println("Already running McLauncher, Only one instance allowed at a time");
+//				System.exit(0);
+//	        }
+//	        lock = channel.lock();
+//
+//	        try {
+//	            lock = channel.tryLock();
+//	        } catch (OverlappingFileLockException e) {
+//	        }
+//	        channel.close();
+//	    } catch (Exception e) {
+//	    }
+		
 		//Not added because i do not want to lock people out from using McLauncher if somehow this fails.
 //		if(new File(System.getProperty("java.io.tmpdir") + "/McLauncher.lock").exists()){
 //			System.exit(0);//close this instance if McLauncher is already running.
@@ -527,14 +567,14 @@ public class ModManager extends JFrame{
 		btnDownload = new JButton("Download");
 		btnDownload.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(canDownloadMod && !downloading){
+				if(canDownloadMod && !CurrentlyDownloading){
 					String dlUrl = getModDownloadUrl();
 					try {
 						if(dlUrl.equals("") || dlUrl.equals(" ") || dlUrl==null){
 							con.log("Log","No download link for mod, got... '" + dlUrl + "'");
 						}else {
-							downloading=true;
-							Download dler = new Download(new URL(dlUrl),McLauncher);
+							CurrentlyDownloading=true;
+							CurrentDownload = new Download(new URL(dlUrl),McLauncher);
 						}
 					} catch (MalformedURLException e1) {
 						con.log("Log","Failed to download mod... No download URL?");
@@ -552,7 +592,7 @@ public class ModManager extends JFrame{
 			}
 		});
 		btnGotoMod.setEnabled(false);
-		btnGotoMod.setBounds(205, 308, 90, 28);
+		btnGotoMod.setBounds(134, 308, 90, 28);
 		panelDownloadMods.add(btnGotoMod);
 		
 		pBarDownloadMod = new JProgressBar();
@@ -649,8 +689,18 @@ public class ModManager extends JFrame{
 		panelDownloadMods.add(lblDLModLicense);
 		
 		lblWipmod = new JLabel("");
-		lblWipmod.setBounds(397, 314, 51, 16);
+		lblWipmod.setBounds(395, 314, 64, 16);
 		panelDownloadMods.add(lblWipmod);
+		
+		JButton btnCancel = new JButton("Cancel");
+		btnCancel.setToolTipText("Stop downloading");
+		btnCancel.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				CurrentDownload.cancel();
+			}
+		});
+		btnCancel.setBounds(230, 308, 72, 28);
+		panelDownloadMods.add(btnCancel);
 		
 		panelOptions = new JPanel();
 		tabbedPane.addTab("Options", null, panelOptions, null);
@@ -798,7 +848,7 @@ public class ModManager extends JFrame{
 		textChangelog = new JTextArea();
 		scrollPane_6.setViewportView(textChangelog);
 		textChangelog.setEditable(false);
-		textChangelog.setText("v0.4.5\r\n\r\n+McLauncher should now correctly warn you on failed write/read access.\r\n+McLauncher should now work when a user has both zip and installer versions of factorio. (Thanks Jeroon)\r\n+Attempt to fix an error with dependency and .zip files, With versions. (Thanks Arano-kai)\r\n+Fix only allow single selection of mods. (Thanks Arano-kai)\r\n+Fix for the Launch+Ignore button problem on linux being cut off. (Thanks Arano-kai)\r\n+Display download progress.\r\n+Fixed an error that was thrown when clicking on some mods that had a single dependency mod.\r\n+Double clicking on a mod will now enable or disable the mod. (Thanks Arano-kai)\r\n\r\nv0.4.4\r\n\r\n+Changelog tab added. \r\n+Fix attempt for linux users not being able to do anything using paths.\r\n+Fix attempt for linux users GUI text in Options tab.\r\n+More support for optional mod dependency.\r\n+Up and down arrow will now work with Mod Downloads selecting.");
+		textChangelog.setText("v0.4.6\r\n\r\n+Fix problem where config file would not save in the correct location. (Thanks Arano-kai)\r\n+McLauncher will now save when you select a path, or profile. (Thanks Arano-kai)\r\n+Fixed an issue where McLauncher could not get the version from a .zip mod. (Thanks Arano-kai)\r\n+Added a Cancel button to stop downloading the current mod. (Suggested by  Arano-kai)\r\n\r\n\r\n\r\nv0.4.5\r\n\r\n+McLauncher should now correctly warn you on failed write/read access.\r\n+McLauncher should now work when a user has both zip and installer versions of factorio. (Thanks Jeroon)\r\n+Attempt to fix an error with dependency and .zip files, With versions. (Thanks Arano-kai)\r\n+Fix only allow single selection of mods. (Thanks Arano-kai)\r\n+Fix for the Launch+Ignore button problem on linux being cut off. (Thanks Arano-kai)\r\n+Display download progress.\r\n+Fixed an error that was thrown when clicking on some mods that had a single dependency mod.\r\n+Double clicking on a mod will now enable or disable the mod. (Thanks Arano-kai)");
 		btnLaunchIgnore.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				if(selProfile!=null){
@@ -1169,6 +1219,7 @@ public class ModManager extends JFrame{
 					updateEnabledMods();
 				}
 			}
+			writeData();
 		} catch (Exception e) {
 			con.log("Warning", "Failed to select the previously selected profile on launch");
 		}
@@ -1231,6 +1282,8 @@ public class ModManager extends JFrame{
         }
         writeData();
 	}
+	
+	
 
 	@SuppressWarnings("unchecked")
 	private void readData() {
@@ -1238,7 +1291,7 @@ public class ModManager extends JFrame{
 		 
 		try {
 		 
-			Object obj = parser.parse(new FileReader("McLauncher.json"));
+			Object obj = parser.parse(new FileReader(workDir + "/McLauncher.json"));
 			con.log("Log","Running McLauncher from " + new File(ModManager.class.getProtectionDomain().getCodeSource().getLocation().getPath()));
 			 
 			JSONObject jsonObject = (JSONObject) obj;
@@ -1373,7 +1426,7 @@ public class ModManager extends JFrame{
 		obj.put("profiles", profileList);
 		
 		 try {
-			 FileWriter file = new FileWriter("McLauncher.json");
+			 FileWriter file = new FileWriter(workDir + "/McLauncher.json");
 			 file.write(obj.toJSONString());
 			 file.flush();
 			 file.close();
@@ -1423,24 +1476,25 @@ public class ModManager extends JFrame{
 	    chooser.setAcceptAllFileFilterUsed(false);
 	    
 	    if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) { 
-	      con.log("Log","getCurrentDirectory(): " 
-	         +  chooser.getCurrentDirectory());
-	      
-	      con.log("Log","getSelectedFile() : " 
-	         +  chooser.getSelectedFile());
-	      
-	      gamePath=""+chooser.getSelectedFile();
-	      if(gamePath.endsWith("/mods")) {gamePath = gamePath.replace("/mods", "");}
-	      con.log("Log",gamePath);
-	      txtGamePath.setText(gamePath);
-	      
-	      validatePath();
-	      checkAccess();
-	      getMods();
-	      }
-	    else {
-	      con.log("Log","No Selection ");
-	      }
+			con.log("Log","getCurrentDirectory(): " 
+					+  chooser.getCurrentDirectory());
+			  
+			con.log("Log","getSelectedFile() : " 
+					+  chooser.getSelectedFile());
+			  
+			gamePath=""+chooser.getSelectedFile();
+			if(gamePath.endsWith("/mods")) {gamePath = gamePath.replace("/mods", "");}
+			con.log("Log",gamePath);
+			txtGamePath.setText(gamePath);
+			  
+				validatePath();
+				checkAccess();
+				getMods();
+				writeData();
+			}
+			else {
+				con.log("Log","No Selection ");
+			}
 	}
 
 

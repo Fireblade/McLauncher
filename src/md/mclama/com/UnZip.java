@@ -102,7 +102,7 @@ public class UnZip
     	util.SendDownloadRequest(URLEncoder.encode(sendreq, "UTF-8")+updateStr);
     	con.log("Log","Done extracting");
     	McLauncher.lblDownloadModInfo.setText("Done");
-    	McLauncher.downloading=false;
+    	McLauncher.CurrentlyDownloading=false;
     	
     	File f = new File(zipFile);
     	f.delete();

@@ -97,7 +97,7 @@ public class Utility {
 			} 
 			else if(modName.contains(".zip")){
 				getJsonFromZip(modPath + modName);
-				obj = parser.parse(new FileReader(System.getProperty("java.io.tmpdir") + "/" + modName.replace(".zip", "") + "/info.json"));
+				obj = parser.parse(new FileReader(System.getProperty("java.io.tmpdir") + "/" + modName.replace(".zip", "").toLowerCase() + "/info.json"));
 			}	else obj = parser.parse(new FileReader(modPath + modName + "/info.json"));
 			 
 			JSONObject jsonObject = (JSONObject) obj;
@@ -123,7 +123,7 @@ public class Utility {
 			Object obj;
 			if(modName.contains(".zip")){
 				getJsonFromZip(modPath + modName);
-				obj = parser.parse(new FileReader(System.getProperty("java.io.tmpdir") + "/" + modName.replace(".zip", "") + "/info.json"));
+				obj = parser.parse(new FileReader(System.getProperty("java.io.tmpdir") + "/" + modName.replace(".zip", "").toLowerCase() + "/info.json"));
 			}	else obj = parser.parse(new FileReader(modPath + modName + "/info.json"));
 			JSONObject jsonObject = (JSONObject) obj;
 			
